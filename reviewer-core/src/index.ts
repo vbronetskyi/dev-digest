@@ -15,6 +15,8 @@
 export {
   assemblePrompt,
   wrapUntrusted,
+  wrapSkill,
+  type SkillPart,
   type PromptParts,
   type AssembledPrompt,
 } from './prompt.js';
