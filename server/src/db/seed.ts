@@ -7,6 +7,7 @@ import {
   SECURITY_REVIEWER_PROMPT,
   PERFORMANCE_REVIEWER_PROMPT,
 } from './seed-prompts.js';
+import { SEED_SKILLS } from './seed-skills.js';
 
 /** Default provider/model for the built-in reviewer agents. */
 const DEFAULT_PROVIDER = 'openrouter' as const;
@@ -218,6 +219,20 @@ export async function seed(db: Db): Promise<{ workspaceId: string; userId: strin
       .from(t.agents)
       .where(and(eq(t.agents.workspaceId, workspaceId), eq(t.agents.name, a.name)));
     if (!existing) await db.insert(t.agents).values(a);
+  }
+
+  // ---- starter skills catalog (unlinked) ----
+  for (const skill of SEED_SKILLS) {
+    const [existing] = await db
+      .select({ id: t.skills.id })
+      .from(t.skills)
+      .where(and(eq(t.skills.workspaceId, workspaceId), eq(t.skills.name, skill.name)));
+    if (existing) continue;
+    const [row] = await db
+      .insert(t.skills)
+      .values({ workspaceId, ...skill, source: 'manual', version: 1 })
+      .returning({ id: t.skills.id });
+    await db.insert(t.skillVersions).values({ skillId: row!.id, version: 1, body: skill.body });
   }
 
   return { workspaceId, userId };

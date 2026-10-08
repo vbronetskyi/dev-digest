@@ -184,6 +184,15 @@ export class ReviewRunExecutor {
 
       const task = taskLine(pull) + rankNote;
 
+      // Skills the agent links — enabled ones only, in the agent's order. Recorded
+      // with their version in the trace so a run can be explained later.
+      const skills = (await this.agents.linkedSkills(agent.id))
+        .filter((l) => l.skill.enabled)
+        .map((l) => l.skill);
+      if (skills.length > 0) {
+        runLog.info(`skills: ${skills.map((s) => `${s.name}@v${s.version}`).join(', ')}`);
+      }
+
       // ---- Engine: assemble → single-pass → grounding -----------------------
       // The pure review pipeline lives in @devdigest/reviewer-core (shared with
       // the CI runner). The service owns only I/O: repo-intel context resolution
@@ -201,6 +210,7 @@ export class ReviewRunExecutor {
         ...(callersDigest ? { callers: callersDigest } : {}),
         // T3 — repo skeleton, same omit-when-empty contract.
         ...(repoMap ? { repoMap } : {}),
+        ...(skills.length > 0 ? { skills: skills.map((s) => ({ name: s.name, body: s.body })) } : {}),
         // PR author's description/body — untrusted; assemblePrompt wraps +
         // truncates it. Omitted when the PR has no body.
         ...(pull.body ? { prDescription: pull.body } : {}),
@@ -262,6 +272,7 @@ export class ReviewRunExecutor {
           model: agent.model,
           pr: pull.number,
           source: 'local',
+          skills: skills.map((s) => ({ id: s.id, name: s.name, version: s.version })),
         },
         stats: {
           duration_ms: durationMs,
