@@ -211,6 +211,14 @@ the store is now a temp file and the container ignores env keys — mock every
 provider a test needs.
 Evidence: `src/platform/container.ts:90`, `src/platform/config.ts:76`
 
+### 2026-10-08 — A run was marked done before its trace was written
+`run-executor` set `agent_runs.status` to done/failed and only then saved `run_traces`.
+Anything that waits for a terminal status and reads the trace — the UI, and tests via
+`waitForPrRuns` — could get the previous (or no) trace. Under a loaded full integration
+run two trace assertions failed this way. The trace is now saved first at all three
+completion points.
+Evidence: `src/modules/reviews/run-executor.ts:324`
+
 ## Session Notes
 
 ### 2026-10-07 — Lab 1: run cost
