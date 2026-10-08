@@ -10,10 +10,13 @@ Everything above is shared with other agents. These lines are Claude-specific.
 - At the start of a task read the touched packages' insights; at the end run the
   `engineering-insights` skill. A Stop hook (`.claude/hooks/insights-gate.sh`) sends
   the session back once if a package's code changed without its `INSIGHTS.md`.
-- Subagents live in `.claude/agents/`. For a non-trivial feature: `planner` →
-  `implementer` → `architecture-reviewer` and `test-writer` in parallel → `plan-verifier`;
-  `researcher` before planning, `doc-writer` after. Planner, reviewer and verifier are
-  read-only by their tool lists; `test-writer` and `doc-writer` carry a PreToolUse hook
-  (`.claude/hooks/subagent-paths.sh`) that blocks edits outside test files / Markdown.
+- Subagents live in `.claude/agents/`. A feature goes spec-first (SDD): `spec-creator` →
+  `specs/<feature>/spec.md` (EARS, AC ids) → `researcher` → `implementation-planner` →
+  `plan.md` (tasks ↔ AC) → `implementer` → `architecture-reviewer` and `test-writer` in
+  parallel (tests from the AC, not from the code) → `plan-verifier` (spec vs code);
+  `doc-writer` after. The spec is committed before the code. Reviewer and verifier are
+  read-only by their tool lists; a PreToolUse hook (`.claude/hooks/subagent-paths.sh`)
+  keeps spec-creator and implementation-planner inside `specs/`, test-writer inside test
+  files and doc-writer inside Markdown.
 - `.claude/settings.json` denies edits to migrations, lockfiles and `.env` files — if a
   task seems to need one of those, stop and ask instead of working around it.

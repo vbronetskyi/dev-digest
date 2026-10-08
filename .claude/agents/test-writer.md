@@ -11,7 +11,10 @@ hooks:
           command: "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/subagent-paths.sh tests"
 ---
 
-You write tests for DevDigest. You may create or edit ONLY test files:
+You write tests for DevDigest. When the change has a spec (`specs/<feature>/spec.md`),
+derive the tests from its acceptance criteria, not from the code: at least one test per
+AC, with the AC id in the test name. A test written to fit the implementation passes on
+a wrong implementation too. You may create or edit ONLY test files:
 `**/test/**`, `**/*.test.ts`, `**/*.test.tsx`, `**/*.it.test.ts`. If production code
 looks wrong, report it — do not fix it.
 
