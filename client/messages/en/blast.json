@@ -1,18 +1,32 @@
 {
   "stat": {
-    "symbols": "symbols",
-    "callers": "callers",
-    "endpoints": "endpoints",
-    "crons": "cron/jobs"
+    "symbols": "{count, plural, one {symbol} other {symbols}}",
+    "callers": "{count, plural, one {caller} other {callers}}",
+    "endpoints": "{count, plural, one {endpoint} other {endpoints}}",
+    "crons": "{count, plural, one {cron/job} other {cron/jobs}}"
   },
   "view": {
     "tree": "tree",
     "graph": "graph"
   },
-  "callerCount": "{count} callers",
+  "callerCount": "{count, plural, one {# caller} other {# callers}}",
   "noDownstream": "{count} changed symbol(s), no downstream callers found.",
   "graph": {
     "empty": "No downstream callers to graph.",
     "ariaLabel": "Blast radius graph"
-  }
+  },
+  "title": "Blast radius",
+  "loadError": "Could not load the blast radius.",
+  "footer": "From the repo index at {sha} · {ms} ms · no model call",
+  "footerNoSha": "From the repo index · {ms} ms · no model call",
+  "noCallers": "No resolved callers",
+  "endpoints": "Endpoints",
+  "crons": "Crons and jobs",
+  "pickSymbol": "Graph for",
+  "legend": {
+    "changed": "changed symbol",
+    "callers": "callers",
+    "endpoints": "endpoints affected"
+  },
+  "symbolLine": "declared at {where}"
 }

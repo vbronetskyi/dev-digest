@@ -30,6 +30,15 @@ compute or cap the number on the server from something checkable. Here the cap
 comes from how many read files show the rule (`also_seen_in` ∩ files read).
 Evidence: `src/modules/conventions/helpers.ts:67`, `src/modules/conventions/constants.ts:16`
 
+### 2026-10-08 — Route modules have no resolved callers
+`modules/index.ts` default-imports each module under a short local name
+(`import reviews from './reviews/routes.js'`), and the indexer records the
+reference as `reviews`, not `reviewsRoutes` — `decl_file` stays null. A PR that
+touches a routes file therefore shows the file's endpoints but 0 callers.
+Fixing it belongs in the repo-intel resolver (map default imports to the
+exported declaration).
+Evidence: `src/modules/index.ts:8`, `src/modules/blast/service.ts:46`
+
 ## Codebase Patterns
 
 ### 2026-10-07 — PR list aggregates belong in SQL, filtered to `done` runs
@@ -53,6 +62,18 @@ cross-module import (depcruise warns on those). Conventions keeps its own
 fallback: Settings choice → registry default → OpenRouter if that provider has
 no key.
 Evidence: `src/modules/_shared/feature-models.ts:35`, `src/modules/conventions/service.ts:84`
+
+### 2026-10-08 — The index is the base commit: map hunks by their old side
+repo-intel indexes `main`, so a PR's new-side line numbers do not line up with
+indexed symbol ranges. Blast radius maps each hunk to base lines (a removal →
+its old line; an insertion → the old line it follows) and matches those.
+Evidence: `src/modules/blast/helpers.ts:8`
+
+### 2026-10-08 — Blast radius must not reach the facade's fallback
+`repoIntel.getBlastRadius` falls back to scanning the clone with ripgrep when no
+index is built — request-time analysis, and slow. The blast service checks
+`getIndexState` first and answers `not_indexed` instead.
+Evidence: `src/modules/blast/service.ts:31`
 
 ## Tool & Library Notes
 
@@ -174,6 +195,12 @@ transaction. Live on this repo: 8–10 files read, 7–8 conventions, 0–1 drop
 ≈ $0.0009 and 18–20 s per scan. Skills can also be imported from a file
 (`imported_file`, disabled until vetted).
 Evidence: `src/modules/conventions/service.ts:84`, `src/modules/skills/service.ts:92`
+
+### 2026-10-08 — Homework 4: blast radius
+`GET /pulls/:id/blast-radius` from the index only; p95 7–8 ms (30 calls on PR #3
+and #5). The facade now caps callers per symbol (it capped the whole list),
+returns declaration ranges, and includes the changed files' own facts.
+Evidence: `src/modules/repo-intel/service.ts:388`, `src/modules/blast/service.ts:20`
 
 ## Open Questions
 
