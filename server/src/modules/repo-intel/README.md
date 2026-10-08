@@ -42,9 +42,9 @@ touch the pipeline internals:
 - `getUnresolvedReferences(repoId, …)` → phantom-symbol detection (used by L06).
 - `getConventionSamples(repoId)` → top-ranked files for convention extraction (L02).
 
-In the starter, only `getRepoMap` / `getFileRank` / `getCallerSignatures` are
-wired — into `modules/reviews/run-executor.ts`, which adds the repo map and a
-high-blast-radius note to the prompt. Toggled by `REPO_INTEL_ENABLED` (global)
+`getRepoMap` / `getFileRank` / `getCallerSignatures` are wired into
+`modules/reviews/run-executor.ts`, which adds the repo map and a high-blast-radius
+note to the prompt; `getConventionSamples` feeds `modules/conventions` (L02). Toggled by `REPO_INTEL_ENABLED` (global)
 and a per-agent `repo_intel` flag.
 
 ## Routes

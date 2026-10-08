@@ -7,7 +7,7 @@ prompt. Skills live in a workspace library; agents link them in an order.
 
 - `skills` — `name` (SKILL.md rule: lowercase words joined by hyphens, ≤ 64),
   `description`, `type` (`rubric | convention | security | custom`), `body`,
-  `source` (`manual | imported_url | extracted | community`), `source_url`,
+  `source` (`manual | imported_url | imported_file | extracted | community`), `source_url`,
   `enabled`, `version`. Unique per workspace by name (409 on a clash).
 - `skill_versions` — one immutable row per body. Version 1 is written on create.
 - `agent_skills` — `(agent_id, skill_id, order)`. Order is prompt order.
@@ -24,10 +24,12 @@ prompt. Skills live in a workspace library; agents link them in an order.
 | `GET /skills/:id/stats` | linked agents + runs whose trace lists the skill, any version |
 | `POST /skills/import/preview` | fetch + parse a SKILL.md URL, save nothing; returns `warnings` |
 | `POST /skills/import` | fetch again and save as `imported_url`, **disabled** |
+| `POST /skills/import/file/preview` | parse an uploaded or pasted SKILL.md (`{text, filename?}`, ≤ 256 KB), save nothing |
+| `POST /skills/import/file` | parse and save as `imported_file`, **disabled**; `source_url` is null |
 | `GET /agents/:id/skills` | links, ordered |
 | `POST /agents/:id/skills {skill_ids}` | replace all links in one transaction; ids are de-duplicated and must belong to the workspace (404 otherwise) |
 
-Both import routes are limited to 10 requests per minute.
+The URL import routes are limited to 10 requests per minute (they fetch from the internet); file imports make no outbound call.
 
 ## Import
 
@@ -39,7 +41,8 @@ Both import routes are limited to 10 requests per minute.
   does not help), each redirect re-validated (max 3), one deadline over the
   whole exchange including the body, `text/*` only, 256 KB cap.
 - Frontmatter gives `name` and `description`; without it the name comes from
-  the URL path. The preview warns about missing frontmatter or description, a
+  the URL path, or for a file from its stem (its first heading when the file is
+  `SKILL.md`). The preview warns about missing frontmatter or description, a
   body over 8 000 characters, and phrases that try to steer a reviewer
   (`STEERING_PATTERNS`). The warnings are for the human — they are not a defence.
 
@@ -59,7 +62,9 @@ The run log gets `skills: name@vN, …` and the trace stores
 ## Invariants
 
 - A disabled skill never reaches a prompt, even if linked.
-- An imported skill starts disabled; enabling it is the vetting step.
+- An imported skill (URL or file) starts disabled; enabling it is the vetting step.
+- A skill accepted from a convention is `source: extracted`, `type: convention`,
+  enabled, with `evidence_files` — see `conventions.md`.
 - Every body ever used by a run is recoverable from `skill_versions` by the
   version in that run's trace.
 - Seeded skills (`src/db/seed-skills.ts`) are created unlinked.

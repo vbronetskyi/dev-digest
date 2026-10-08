@@ -23,6 +23,13 @@ with a short "evidence you can and cannot see" section approved PR #1 and still
 flagged the SSRF in PR #3 as CRITICAL (it dropped the valid "no timeout" warning).
 Evidence: `src/db/seed-prompts.ts:11`, `src/app.ts:169`
 
+### 2026-10-08 — Numeric limits stated only in the prompt are ignored
+Asked to keep single-file conventions at confidence ≤ 0.6, deepseek-v4-flash
+rated all eight 1.0 on the first live scan. Same lesson as the review score:
+compute or cap the number on the server from something checkable. Here the cap
+comes from how many read files show the rule (`also_seen_in` ∩ files read).
+Evidence: `src/modules/conventions/helpers.ts:67`, `src/modules/conventions/constants.ts:16`
+
 ## Codebase Patterns
 
 ### 2026-10-07 — PR list aggregates belong in SQL, filtered to `done` runs
@@ -38,6 +45,14 @@ Evidence: `src/modules/pulls/routes.ts:140`
 PR list and the client preview both filter to `kind = 'review'`; anything that
 shows "the latest run" must do the same or it can pick a summary record.
 Evidence: `src/modules/reviews/repository/review.repo.ts:66`, `../client/src/app/repos/[repoId]/pulls/_components/FindingsPopover/helpers.ts:36`
+
+### 2026-10-08 — Feature models resolve from `modules/_shared`, not `settings`
+`getFeatureModelOverride` / `resolveFeatureModel` moved to
+`modules/_shared/feature-models.ts` so a feature module can use them without a
+cross-module import (depcruise warns on those). Conventions keeps its own
+fallback: Settings choice → registry default → OpenRouter if that provider has
+no key.
+Evidence: `src/modules/_shared/feature-models.ts:35`, `src/modules/conventions/service.ts:84`
 
 ## Tool & Library Notes
 
@@ -106,6 +121,14 @@ If the API ignores your change: `lsof -nP -iTCP:3001 -sTCP:LISTEN`, check the
 listener's parent chain, kill the orphaned tree, touch `src/server.ts`.
 Evidence: `../scripts/dev.sh:100`, `../scripts/dev.sh:105`
 
+### 2026-10-08 — A synchronous model call needs its own deadline
+The first live conventions scan hung in step 1; without a bound the HTTP
+request would have waited for the OS socket timeout (~15 min, see the
+reviewer-core insight on the SDK timeout). `withDeadline` returns a 502 after
+120 s. It does not abort the provider request, which may still finish and bill.
+The retry a minute later took 18 s.
+Evidence: `src/modules/conventions/service.ts:54`, `src/modules/conventions/constants.ts:22`
+
 ## Session Notes
 
 ### 2026-10-07 — Lab 1: run cost
@@ -136,6 +159,14 @@ although the stored prompt has it — so the sample says little about the skill.
 This supersedes the Homework 1 note that Performance "missed" the N+1: its L1
 run also claimed there was no diff.
 Evidence: `src/modules/reviews/run-executor.ts:190`, `src/db/seed-skills.ts:41`
+
+### 2026-10-08 — Lab 2, part 2: conventions extractor and file import
+`modules/conventions`: two model calls over repo-intel's top files, grounding by
+verbatim quote with line ranges, accept → enabled convention skill in one locked
+transaction. Live on this repo: 8–10 files read, 7–8 conventions, 0–1 dropped,
+≈ $0.0009 and 18–20 s per scan. Skills can also be imported from a file
+(`imported_file`, disabled until vetted).
+Evidence: `src/modules/conventions/service.ts:84`, `src/modules/skills/service.ts:92`
 
 ## Open Questions
 

@@ -35,6 +35,13 @@ cannot import reviewer-core. Changing the escaping or the name rule in one place
 without the other makes the preview lie.
 Evidence: `src/app/skills/helpers.ts:18`, `../reviewer-core/src/prompt.ts:46`
 
+### 2026-10-08 — Missing message keys are caught by a test, not by next-intl
+next-intl only logs a missing key and renders it raw; typecheck and component
+tests stay green. `i18n-keys.test.ts` scans every literal `t("…")` against
+`messages/en` (it caught a key dropped while reorganising `skills.json`). Keys
+built with template literals are not covered.
+Evidence: `src/lib/i18n-keys.test.ts:1`
+
 ## Tool & Library Notes
 
 ### 2026-10-07 — `messages/en/runs.json` is not uniformly indented
@@ -62,6 +69,18 @@ not resolve. Import the schema from `@/vendor/shared/contracts/<file>` instead �
 it works as long as that file imports nothing but `zod`. Types can still come
 from the barrel.
 Evidence: `src/app/skills/_components/SkillConfigForm/SkillConfigForm.tsx:11`, `src/lib/feature-models.ts:6`
+
+### 2026-10-08 — A new route breaks `pnpm typecheck` until Next regenerates its types
+`tsconfig.json` includes `.next/types/**`. After adding `app/repos/[repoId]/conventions`
+the check failed in `.next/types/validator.ts` ("does not satisfy AppRoutes")
+because the generated route list was stale. Opening the page once on the dev
+server (or `next build`) regenerates it; the code was fine.
+Evidence: `tsconfig.json:33`
+
+### 2026-10-08 — jsdom's `File` has no `text()`
+Components may use `await file.text()` (all current browsers have it), but in
+tests define it on the test file: `Object.defineProperty(file, "text", …)`.
+Evidence: `src/app/skills/_components/ImportSkillDrawer/ImportSkillDrawer.test.tsx:103`
 
 ## Recurring Errors & Fixes
 
@@ -93,5 +112,11 @@ drawer), Skills tab in the agent editor (link, reorder by drag or arrows), and
 browser against the live API: link two skills, import a SKILL.md from GitHub
 (lands disabled, "needs vetting"), edit a body → v2 with a one-line diff.
 Evidence: `src/app/skills/page.tsx:20`, `src/app/agents/[id]/_components/AgentEditor/_components/SkillsTab/SkillsTab.tsx:20`
+
+### 2026-10-08 — Lab 2, part 2: Conventions page and file import
+`/repos/:repoId/conventions` (scan on click, evidence linked to GitHub lines,
+Accept as Skill / Edit first / Reject, bulk actions) and a From file tab in the
+import drawer. Verified in a scripted browser on live scans of this repo.
+Evidence: `src/app/repos/[repoId]/conventions/page.tsx:23`, `src/app/skills/_components/ImportSkillDrawer/ImportSkillDrawer.tsx:26`
 
 ## Open Questions
