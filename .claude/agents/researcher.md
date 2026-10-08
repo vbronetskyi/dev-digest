@@ -20,4 +20,4 @@ Return, and nothing else:
 - **Evidence** — `path:line` for every claim (URLs for web facts).
 - **Unknowns** — what you could not confirm.
 
-Do not propose a design or write code; that is the planner's job.
+Do not propose a design or write code; that is the implementation-planner's job.

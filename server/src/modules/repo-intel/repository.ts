@@ -454,7 +454,8 @@ export class RepoIntelRepository {
       .select({ path: t.fileRank.filePath, rank: t.fileRank.rank })
       .from(t.fileRank)
       .where(eq(t.fileRank.repoId, repoId))
-      .orderBy(desc(t.fileRank.rank))
+      // Path breaks ties so equal ranks (a flat graph) come back in a stable order.
+      .orderBy(desc(t.fileRank.rank), asc(t.fileRank.filePath))
       .limit(limit);
   }
 
@@ -528,6 +529,16 @@ export class RepoIntelRepository {
           inArray(t.references.toSymbol, names),
         ),
       );
+  }
+
+  /** All per-file facts (endpoints/crons) of a repo, by path. */
+  async getAllFileFacts(repoId: string): Promise<IndexerFileFactsRow[]> {
+    const rows = await this.db
+      .select({ filePath: t.fileFacts.filePath, endpoints: t.fileFacts.endpoints, crons: t.fileFacts.crons })
+      .from(t.fileFacts)
+      .where(eq(t.fileFacts.repoId, repoId))
+      .orderBy(asc(t.fileFacts.filePath));
+    return rows.map((r) => ({ filePath: r.filePath, endpoints: (r.endpoints as string[]) ?? [], crons: (r.crons as string[]) ?? [] }));
   }
 
   /** Per-file facts (endpoints/crons) for the given files. */

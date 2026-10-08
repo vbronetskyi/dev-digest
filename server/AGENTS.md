@@ -50,5 +50,8 @@ pnpm db:migrate && pnpm db:seed                   # not run on boot
 - Touching blast radius → `specs/blast.md`
 - Touching the PR intent layer → `specs/intent.md`
 - Touching the smart diff (Files changed order, markers, split) → `specs/smart-diff.md`
+- Touching project context (specs/docs/insights in reviews, agent context) → `specs/context.md`
+- Touching the onboarding tour → `specs/onboarding.md`
+- Starting a new feature → write `../specs/<feature>/spec.md` first (`../specs/README.md`)
 - Writing tests → `../TESTING.md` (and the `.it.test.ts` rule)
 - Before any task in this package → `insights/INSIGHTS.md`

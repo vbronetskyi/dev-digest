@@ -711,6 +711,12 @@ export class RepoIntelService implements RepoIntel {
     }
     return paths;
   }
+
+  async getRepoFileFacts(repoId: string): Promise<Array<{ path: string; endpoints: string[]; crons: string[] }>> {
+    if (!this.container.config.repoIntelEnabled) return [];
+    const rows = await this.repo.getAllFileFacts(repoId);
+    return rows.map((r) => ({ path: r.filePath, endpoints: r.endpoints, crons: r.crons }));
+  }
 }
 
 /** How many top-ranked files seed `getCriticalPaths` dependency chains. */

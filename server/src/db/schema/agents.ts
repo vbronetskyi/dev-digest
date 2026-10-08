@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import { pgTable, uuid, text, integer, boolean, jsonb, primaryKey } from 'drizzle-orm/pg-core';
 import { now } from './_shared';
 import { workspaces, users } from './core';
@@ -29,6 +30,9 @@ export const agents = pgTable('agents', {
   // + file-rank note) injected into the prompt. Default on; the global
   // REPO_INTEL_ENABLED flag is the second gate (facade degrades when off).
   repoIntel: boolean('repo_intel').notNull().default(true),
+  // L05 Project Context Folder — repo-relative .md paths (specs/, docs/,
+  // insights/) put into this agent's review prompt, in this order.
+  contextPaths: jsonb('context_paths').$type<string[]>().notNull().default(sql`'[]'::jsonb`),
   enabled: boolean('enabled').notNull().default(true),
   version: integer('version').notNull().default(1),
   createdBy: uuid('created_by').references(() => users.id),

@@ -227,6 +227,11 @@ export class AgentsRepository {
    * the list are unlinked.
    */
   /** Replace the agent's links in one transaction, so a failed insert cannot leave it with none. */
+  /** The agent's attached context documents, in prompt order (SPEC-01). */
+  async setContextPaths(agentId: string, paths: string[]): Promise<void> {
+    await this.db.update(t.agents).set({ contextPaths: paths }).where(eq(t.agents.id, agentId));
+  }
+
   async setSkills(agentId: string, skillIds: string[]): Promise<void> {
     await this.db.transaction(async (tx) => {
       await tx.delete(t.agentSkills).where(eq(t.agentSkills.agentId, agentId));

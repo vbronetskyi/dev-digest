@@ -47,6 +47,13 @@ Fixing it belongs in the repo-intel resolver (map default imports to the
 exported declaration).
 Evidence: `src/modules/index.ts:8`, `src/modules/blast/service.ts:46`
 
+### 2026-10-08 — Raw PageRank is a poor reading order
+PageRank pools rank in files that import nothing, so a live tour of this repo put
+`RunTraceDrawer/styles.ts` and `repo-intel/constants.ts` on the onboarding reading
+path. Style, constant and type-only modules are left out there; the rest keeps rank
+order. Expect the same skew anywhere `getTopFilesByRank` picks "important" files.
+Evidence: `src/modules/onboarding/constants.ts:20`
+
 ## Codebase Patterns
 
 ### 2026-10-07 — PR list aggregates belong in SQL, filtered to `done` runs
@@ -99,6 +106,13 @@ uses it for `markers_stale` (head ≠ last reviewed) — enough to warn that fin
 lines may have shifted, not to re-anchor them.
 Evidence: `src/modules/reviews/repository/pull.repo.ts:54`, `src/modules/smart-diff/service.ts:25`
 
+### 2026-10-08 — Read repository text from the commit, not the working tree
+`GitClient.readFile` joins the path onto the clone and reads the working tree: it
+follows symlinks and sees whatever is checked out. Anything a model or a page will
+show (context documents, manifests) goes through `readCommitted` (`git show
+HEAD:<path>`) and only for paths `listFiles` returned, which already drops symlinks.
+Evidence: `src/adapters/git/simple-git.ts:130`, `src/adapters/git/simple-git.ts:141`, `src/adapters/git/simple-git.ts:151`
+
 ## Tool & Library Notes
 
 ### 2026-10-07 — OpenRouter usage counters lag behind the generation
@@ -131,6 +145,13 @@ Evidence: `../reviewer-core/src/llm/openrouter.ts:54`, `src/modules/reviews/run-
 `test/prompt-*.test.ts` compiled "fine" and only failed as wrong runtime output.
 After a contract change, grep the tests for the old shape yourself.
 Evidence: `tsconfig.json:28`, `test/prompt-structured.test.ts:17`
+
+### 2026-10-08 — The client copy of `adapters.ts` is not kept in sync, on purpose
+Ports (`GitClient`, `LLMProvider`…) are used only by the server; the client copy of
+`vendor/shared/adapters.ts` already lacked `sync`, `diffNameOnly` and more before L05.
+New port methods (`listFiles`, `readCommitted`) went to the server copy only. The
+"mirror every contract" rule is about `contracts/`, which the client does import.
+Evidence: `src/vendor/shared/adapters.ts:232`
 
 ## Recurring Errors & Fixes
 
@@ -190,6 +211,14 @@ the store is now a temp file and the container ignores env keys — mock every
 provider a test needs.
 Evidence: `src/platform/container.ts:90`, `src/platform/config.ts:76`
 
+### 2026-10-08 — A run was marked done before its trace was written
+`run-executor` set `agent_runs.status` to done/failed and only then saved `run_traces`.
+Anything that waits for a terminal status and reads the trace — the UI, and tests via
+`waitForPrRuns` — could get the previous (or no) trace. Under a loaded full integration
+run two trace assertions failed this way. The trace is now saved first at all three
+completion points.
+Evidence: `src/modules/reviews/run-executor.ts:324`
+
 ## Session Notes
 
 ### 2026-10-07 — Lab 1: run cost
@@ -234,6 +263,14 @@ Evidence: `src/modules/conventions/service.ts:84`, `src/modules/skills/service.t
 and #5). The facade now caps callers per symbol (it capped the whole list),
 returns declaration ranges, and includes the changed files' own facts.
 Evidence: `src/modules/repo-intel/service.ts:388`, `src/modules/blast/service.ts:20`
+
+### 2026-10-08 — Lab 5: project context folder and onboarding, spec-first
+Both features went spec → independent review → plan → code. The review by a second
+agent found ~20 problems in the first specs (symlink reads, contradicting AC, no cap on
+facts, a failed regenerate overwriting a good tour); live runs changed the spec twice
+more (document headings, reading-path leaves). A failed regenerate never replaces a
+model-written tour.
+Evidence: `../specs/project-context/spec.md:1`, `../specs/onboarding/spec.md:1`, `src/modules/onboarding/service.ts:93`
 
 ## Open Questions
 

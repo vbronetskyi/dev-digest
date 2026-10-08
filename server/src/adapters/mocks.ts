@@ -24,6 +24,7 @@ import type {
   UnifiedDiff,
   BlameLine,
   GitCommit,
+  TrackedFile,
   CodeIndex,
   CodeMatch,
   CodeSymbol,
@@ -244,7 +245,10 @@ export class MockGitHubClient implements GitHubClient {
 // ---------- Mock Git ----------
 export interface MockGitOptions {
   diff?: string;
+  /** Committed files: what `readFile` serves and `listFiles` lists (with byte sizes). */
   files?: Record<string, string>;
+  /** `listFiles` returns null — the repo has no local clone. */
+  noClone?: boolean;
   /** Name-only diff result (drives the incremental indexer's "changed files since X" path). */
   diffNameOnly?: string[];
   /** Override `currentHead()` so tests can simulate "sha unchanged since last index". */
@@ -255,6 +259,10 @@ export interface MockGitOptions {
 
 export class MockGitClient implements GitClient {
   public cloned: { repo: RepoRef; url: string }[] = [];
+  /** Paths read from the commit (`readCommitted`), in order. */
+  public reads: string[] = [];
+  /** Paths read from the working tree (`readFile`) — kept apart so tests can tell the two. */
+  public worktreeReads: string[] = [];
   public syncs: { repo: RepoRef; branch: string }[] = [];
   private syncedHead?: string;
 
@@ -293,7 +301,17 @@ export class MockGitClient implements GitClient {
     return [{ sha: 'a1b2c3d4', message: 'init', author: 'marisa.koch', date: '2026-06-01' }];
   }
   async readFile(_repo: RepoRef, path: string): Promise<string> {
+    this.worktreeReads.push(path);
     return this.opts.files?.[path] ?? '';
+  }
+  async readCommitted(_repo: RepoRef, path: string): Promise<string | null> {
+    this.reads.push(path);
+    if (this.opts.noClone) return null;
+    return this.opts.files?.[path] ?? null;
+  }
+  async listFiles(): Promise<TrackedFile[] | null> {
+    if (this.opts.noClone) return null;
+    return Object.entries(this.opts.files ?? {}).map(([path, body]) => ({ path, bytes: Buffer.byteLength(body) }));
   }
 }
 

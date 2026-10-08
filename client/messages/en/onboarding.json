@@ -1,17 +1,23 @@
 {
   "title": "Onboarding Tour",
-  "sections": "Sections",
-  "sectionCount": "{count} sections",
+  "heading": "Onboarding for ",
+  "repoFallback": "this repository",
+  "onThisPage": "On this page",
   "regenerate": "Regenerate",
   "regenerating": "Regenerating…",
-  "unknownError": "Unknown error",
   "generate": {
-    "title": "Generate onboarding tour",
-    "body": "DevDigest indexes the repo and specs, then writes a 5-section guided tour: overview, architecture, key modules, getting started, and conventions & gotchas.",
+    "title": "Generate an onboarding tour",
+    "body": "DevDigest collects facts about this repository with code — layout, packages, scripts, endpoints and the import graph — and one model call turns them into a five-part tour: architecture, critical paths, how to run, a reading path and first tasks. About 30 seconds, well under a cent.",
     "cta": "Generate onboarding tour",
     "generating": "Generating…"
   },
   "loadError": {
     "title": "Couldn’t load the onboarding tour"
-  }
+  },
+  "generateError": "Couldn’t generate the tour: {message}",
+  "meta": {
+    "model": "Written by {model} from facts collected by code · {cost} · index {sha} · {date}",
+    "skeleton": "Skeleton built from the facts alone, no model ({reason}) · index {sha} · {date}"
+  },
+  "openOnGitHub": "Open {path} on GitHub"
 }

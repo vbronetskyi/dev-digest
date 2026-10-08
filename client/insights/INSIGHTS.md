@@ -96,6 +96,13 @@ under different parents, which re-applies them; a new annotation inside the same
 order does not refold a card the user already opened — intended.
 Evidence: `src/components/diff-viewer/FileCard/FileCard.tsx:45`
 
+### 2026-10-08 — The kit's `Markdown` did not style headings or lists
+It overrode only `p`, `strong`, `code` and `a`, so repository documents and tour
+sections showed headings and bullet lists as plain lines (the global CSS reset strips
+them). Headings, lists and code blocks now have styles in `em`; `safe` mode keeps only
+http(s) links and drops images for text written outside DevDigest.
+Evidence: `src/vendor/ui/primitives/Markdown.tsx:28`
+
 ## Recurring Errors & Fixes
 
 ### 2026-10-08 — A disabled-and-pressed toggle traps the user
@@ -116,6 +123,13 @@ Evidence: `src/app/repos/[repoId]/pulls/[number]/_components/FindingCard/styles.
 "1 callers", "1 symbols". Use ICU plurals and pass `count` even to labels that
 sit next to a separately rendered number.
 Evidence: `src/app/repos/[repoId]/pulls/[number]/_components/BlastRadiusCard/BlastRadiusCard.tsx:48`
+
+### 2026-10-08 — The agent page had its own list of tabs
+`/agents/[id]/page.tsx` validated `?tab=` against a hardcoded `["config", "skills"]`,
+so the new Context tab rendered in the bar but every click fell back to Config. Only
+the browser check caught it — component tests render the tab directly. The page now
+reads the editor's `TABS` through `editorTab()`.
+Evidence: `src/app/agents/[id]/page.tsx:24`, `src/app/agents/[id]/_components/AgentEditor/helpers.ts:5`
 
 ## Session Notes
 
@@ -145,5 +159,11 @@ Evidence: `src/app/skills/page.tsx:20`, `src/app/agents/[id]/_components/AgentEd
 Accept as Skill / Edit first / Reject, bulk actions) and a From file tab in the
 import drawer. Verified in a scripted browser on live scans of this repo.
 Evidence: `src/app/repos/[repoId]/conventions/page.tsx:23`, `src/app/skills/_components/ImportSkillDrawer/ImportSkillDrawer.tsx:26`
+
+### 2026-10-08 — Lab 5: Project Context, agent Context tab, Onboarding Tour
+Shared pieces for both screens live in `src/components/context-doc`. The Context tab
+follows the sidebar's active repo — with an uncloned repo it lists nothing and says so,
+without calling attached paths missing.
+Evidence: `src/components/context-doc/index.ts:1`, `src/app/agents/[id]/_components/AgentEditor/_components/ContextTab/ContextTab.tsx:1`
 
 ## Open Questions

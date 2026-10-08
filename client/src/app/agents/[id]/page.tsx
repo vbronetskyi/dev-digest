@@ -1,5 +1,5 @@
 /* /agents/:id — Agent Editor (A2, L03). Left agent list + editor tabs
-   (Config, Skills). Tab state lives in ?tab=. Ported from screen_agents.jsx. */
+   (Config, Skills, Context). Tab state lives in ?tab=. Ported from screen_agents.jsx. */
 "use client";
 
 import React from "react";
@@ -7,11 +7,9 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Button, Dropdown, ErrorState, Skeleton, Icon, Badge } from "@devdigest/ui";
 import { AppShell } from "../../../components/app-shell";
 import { AgentCard } from "../_components/AgentCard";
-import { AgentEditor } from "./_components/AgentEditor";
+import { AgentEditor, editorTab } from "./_components/AgentEditor";
 import { useAgents, useAgent, useUpdateAgent } from "../../../lib/hooks/agents";
 import { ApiError } from "../../../lib/api";
-
-const VALID_TABS = ["config", "skills"];
 
 export default function AgentEditorPage() {
   const params = useParams<{ id: string }>();
@@ -23,7 +21,7 @@ export default function AgentEditorPage() {
   const { data: agent, isLoading, isError, error, refetch } = useAgent(id);
   const update = useUpdateAgent();
 
-  const tab = VALID_TABS.includes(search.get("tab") ?? "") ? search.get("tab")! : "config";
+  const tab = editorTab(search.get("tab"));
   const setTab = (t: string) => {
     const sp = new URLSearchParams(search.toString());
     sp.set("tab", t);

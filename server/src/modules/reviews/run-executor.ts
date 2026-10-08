@@ -9,6 +9,7 @@ import { REVIEW_STRATEGY } from './constants.js';
 import { taskLine } from './helpers.js';
 import { loadDiff } from './diff-loader.js';
 import { IntentDeriver, toIntentPart } from './intent.js';
+import { contextDocsFrom, estimateTokens, packContext } from '../_shared/project-context.js';
 
 /** Thrown by a run when the user cancels it mid-flight (between map files). */
 export class RunCancelledError extends Error {
@@ -80,6 +81,9 @@ export class ReviewRunExecutor {
     const failAll = async (msg: string) => {
       for (const { runId, agent } of jobs) {
         await this.repo
+          .saveRunTrace(runId, this.traceFromBuffer(runId, pull, agent, '0/0 passed'))
+          .catch(() => undefined);
+        await this.repo
           .completeAgentRun(runId, {
             status: 'failed',
             durationMs: 0,
@@ -90,9 +94,6 @@ export class ReviewRunExecutor {
             grounding: '0/0 passed',
             error: msg,
           })
-          .catch(() => undefined);
-        await this.repo
-          .saveRunTrace(runId, this.traceFromBuffer(runId, pull, agent, '0/0 passed'))
           .catch(() => undefined);
         this.container.runBus.complete(runId);
       }
@@ -174,6 +175,9 @@ export class ReviewRunExecutor {
     // events are already in this run's buffer, so the persisted trace below
     // (built from the buffer) includes them too.
     const runLog = parentLog.forRun(runId, { agent: agent.name });
+    // Paths of the project-context documents in the prompt — kept outside the
+    // try so a failed run's trace records them too (SPEC-01 AC-13).
+    let contextRead: string[] = [];
 
     runLog.info(`Starting review with agent "${agent.name}" (${agent.provider}/${agent.model})`);
 
@@ -217,6 +221,9 @@ export class ReviewRunExecutor {
         runLog.info(`skills: ${skills.map((s) => `${s.name}@v${s.version}`).join(', ')}`);
       }
 
+      const projectContext = await this.buildProjectContext(repo, agent, runLog);
+      contextRead = projectContext?.read ?? [];
+
       // ---- Engine: assemble → single-pass → grounding -----------------------
       // The pure review pipeline lives in @devdigest/reviewer-core (shared with
       // the CI runner). The service owns only I/O: repo-intel context resolution
@@ -235,6 +242,9 @@ export class ReviewRunExecutor {
         // T3 — repo skeleton, same omit-when-empty contract.
         ...(repoMap ? { repoMap } : {}),
         ...(skills.length > 0 ? { skills: skills.map((s) => ({ name: s.name, body: s.body })) } : {}),
+        // SPEC-01 — attached specs/docs/insights, already packed into the budget;
+        // every model call of the review (map-reduce chunks too) carries them.
+        ...(projectContext ? { specs: projectContext.specs } : {}),
         // PR author's description/body — untrusted; assemblePrompt wraps +
         // truncates it. Omitted when the PR has no body.
         ...(pull.body ? { prDescription: pull.body } : {}),
@@ -275,20 +285,9 @@ export class ReviewRunExecutor {
       // the timeline colors on, NOT the model's self-reported verdict.
       const blockers = countBlockers(keptFindings, agent.ciFailOn);
 
-      // ---- Observability: agent_runs + ONE run_traces document --------------
-      await this.repo.completeAgentRun(runId, {
-        status: 'done',
-        durationMs,
-        tokensIn,
-        tokensOut,
-        costUsd,
-        findingsCount: findingRows.length,
-        grounding,
-        score: outcome.review.score,
-        blockers,
-        error: null,
-      });
-
+      // ---- Observability: ONE run_traces document, then the agent_runs row ---
+      // The trace is written first: anything that waits for a terminal status
+      // (the UI, tests) may read the trace right away.
       const trace: RunTrace = {
         config: {
           agent: agent.name,
@@ -316,13 +315,25 @@ export class ReviewRunExecutor {
         })),
         raw_output: outcome.raw,
         memory_pulled: [],
-        specs_read: [],
+        specs_read: contextRead,
         // Persisted log = the run's FULL event buffer (incl. shared pre-work:
         // diff load + intent), not just events recorded inside this method.
         log: runLog.logFor(runId),
       };
       runLog.info('Run complete; trace persisted');
       await this.repo.saveRunTrace(runId, trace);
+      await this.repo.completeAgentRun(runId, {
+        status: 'done',
+        durationMs,
+        tokensIn,
+        tokensOut,
+        costUsd,
+        findingsCount: findingRows.length,
+        grounding,
+        score: outcome.review.score,
+        blockers,
+        error: null,
+      });
       this.container.runBus.complete(runId);
 
       return { review, findings: findingRows, grounding, raw: outcome.review };
@@ -334,6 +345,9 @@ export class ReviewRunExecutor {
       const msg = cancelled ? 'Cancelled by user' : (err as Error).message;
       runLog.error(cancelled ? 'Run cancelled by user' : `Run failed: ${msg}`);
       await this.repo
+        .saveRunTrace(runId, this.traceFromBuffer(runId, pull, agent, '0/0 passed', Date.now() - start, contextRead))
+        .catch(() => undefined);
+      await this.repo
         .completeAgentRun(runId, {
           status,
           durationMs: Date.now() - start,
@@ -344,9 +358,6 @@ export class ReviewRunExecutor {
           grounding: '0/0 passed',
           error: msg,
         })
-        .catch(() => undefined);
-      await this.repo
-        .saveRunTrace(runId, this.traceFromBuffer(runId, pull, agent, '0/0 passed', Date.now() - start))
         .catch(() => undefined);
       this.container.runBus.complete(runId);
       throw err;
@@ -441,6 +452,44 @@ export class ReviewRunExecutor {
   }
 
   /**
+   * SPEC-01 — the agent's attached specs/docs/insights for this repository:
+   * resolved against the documents the clone actually lists, read from the
+   * default branch's commit (never the PR head or the working tree) and packed
+   * into the budget. `undefined` leaves the prompt exactly as before.
+   */
+  private async buildProjectContext(
+    repo: typeof schema.repos.$inferSelect,
+    agent: AgentRow,
+    runLog: RunLogger,
+  ): Promise<{ specs: string[]; read: string[] } | undefined> {
+    const attached = agent.contextPaths ?? [];
+    if (attached.length === 0) return undefined;
+    const ref = { owner: repo.owner, name: repo.name };
+    const tree = await this.container.git.listFiles(ref);
+    if (!tree) {
+      runLog.info('context: no local clone — attached documents left out');
+      return undefined;
+    }
+    const listed = new Set(contextDocsFrom(tree).map((d) => d.path));
+    const missing = attached.filter((path) => !listed.has(path));
+    if (missing.length > 0) runLog.info(`context: not in this repository — ${missing.join(', ')}`);
+    const docs: { path: string; body: string }[] = [];
+    for (const path of attached.filter((p) => listed.has(p))) {
+      const body = await this.container.git.readCommitted(ref, path);
+      if (body !== null) docs.push({ path, body });
+    }
+    if (docs.length === 0) return undefined;
+
+    const packed = packContext(docs);
+    const head = await this.container.git.currentHead(ref).catch(() => null);
+    const tokens = estimateTokens(packed.blocks.reduce((n, b) => n + b.length, 0));
+    runLog.info(`context: ${packed.read.length} document(s) from ${head ? head.slice(0, 7) : 'the clone'}, ≈${tokens} tokens`);
+    if (packed.cut) runLog.info(`context: ${packed.cut} cut at the budget`);
+    if (packed.skipped.length > 0) runLog.info(`context: left out, budget spent — ${packed.skipped.join(', ')}`);
+    return { specs: packed.blocks, read: packed.read };
+  }
+
+  /**
    * A minimal RunTrace whose `log` is the run's full SSE buffer — persisted on
    * failure/cancel (and pre-work failures) so the events (and WHY it failed)
    * survive a reload, not just the in-memory stream.
@@ -451,6 +500,7 @@ export class ReviewRunExecutor {
     agent: AgentRow,
     grounding: string,
     durationMs = 0,
+    specsRead: string[] = [],
   ): RunTrace {
     return {
       config: {
@@ -466,7 +516,7 @@ export class ReviewRunExecutor {
       tool_calls: [],
       raw_output: '',
       memory_pulled: [],
-      specs_read: [],
+      specs_read: specsRead,
       log: this.container.runBus.buffer(runId).map((e) => ({ t: e.t, kind: e.kind, msg: e.msg })),
     };
   }

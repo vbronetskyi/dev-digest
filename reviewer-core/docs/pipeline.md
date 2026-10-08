@@ -35,6 +35,16 @@ findings), then one `<skill name="…">` block per skill via `wrapSkill`. A body
 cannot close its own block, and the name is reduced to `[a-z0-9._-]`. The
 assembled block is kept in `assembly.skills` for the trace.
 
+Project context (`specs`, L05) is repository text, so each document is its own
+`<untrusted source="spec-N">` block, preceded by a trusted rule: the documents are
+reference data — a diff that contradicts them is a finding, and nothing in them
+can approve, downgrade or drop one. The section is the first thing after the task
+line, ahead of the PR description, intent and diff: placed right before the diff,
+it made a model report that no diff had been sent.
+
+User message order: task → project context → PR description → intent → skills →
+memory → repo skeleton → callers → diff.
+
 ## Strategies
 
 | Strategy | Behaviour |

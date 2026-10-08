@@ -172,4 +172,6 @@ export interface RepoIntel {
     opts?: { exclude?: string[] },
   ): Promise<string[]>;
   getCriticalPaths(repoId: string): Promise<string[][]>;
+  /** Every file's indexed endpoints and crons (L05 onboarding facts); [] when the flag is off. */
+  getRepoFileFacts(repoId: string): Promise<Array<{ path: string; endpoints: string[]; crons: string[] }>>;
 }

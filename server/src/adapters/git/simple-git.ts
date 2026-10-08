@@ -9,6 +9,7 @@ import type {
   UnifiedDiff,
   BlameLine,
   GitCommit,
+  TrackedFile,
 } from '@devdigest/shared';
 import { parseUnifiedDiff } from './diff-parser.js';
 
@@ -129,6 +130,40 @@ export class SimpleGitClient implements GitClient {
   async readFile(repo: RepoRef, path: string): Promise<string> {
     return readFile(join(this.clonePathFor(repo), path), 'utf8');
   }
+
+  async listFiles(repo: RepoRef, commit = 'HEAD'): Promise<TrackedFile[] | null> {
+    if (!(await this.exists(join(this.clonePathFor(repo), '.git')))) return null;
+    // -z: NUL-separated records with paths unquoted, whatever characters they hold.
+    const raw = await this.git(repo).raw(['ls-tree', '-r', '-l', '-z', '--full-tree', commit]);
+    return parseLsTree(raw);
+  }
+
+  async readCommitted(repo: RepoRef, path: string, commit = 'HEAD'): Promise<string | null> {
+    if (!(await this.exists(join(this.clonePathFor(repo), '.git')))) return null;
+    try {
+      return await this.git(repo).raw(['show', `${commit}:${path}`]);
+    } catch {
+      return null; // not in the commit
+    }
+  }
+}
+
+const SYMLINK_MODE = '120000';
+
+/**
+ * `<mode> <type> <object> <size>\t<path>` records. Regular blobs only:
+ * submodules (no size) and symbolic links (mode 120000) are left out.
+ */
+export function parseLsTree(raw: string): TrackedFile[] {
+  const out: TrackedFile[] = [];
+  for (const record of raw.split('\0')) {
+    const tab = record.indexOf('\t');
+    if (tab === -1) continue;
+    const [mode, type, , size] = record.slice(0, tab).trim().split(/\s+/);
+    if (type !== 'blob' || mode === SYMLINK_MODE) continue;
+    out.push({ path: record.slice(tab + 1), bytes: Number(size) || 0 });
+  }
+  return out;
 }
 
 function parseBlamePorcelain(raw: string): BlameLine[] {

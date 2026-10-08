@@ -1,5 +1,6 @@
 import type { Container } from '../../platform/container.js';
 import type {
+  AgentContext,
   Agent,
   AgentSkillLink,
   AgentVersion,
@@ -146,6 +147,20 @@ export class AgentsService {
    * Set / reorder the agent's linked skills. If `skillIds` is provided, replaces
    * the whole set in that order. Returns the resulting ordered links.
    */
+  /** SPEC-01 — documents the agent reads during reviews; undefined when not in this workspace. */
+  async context(workspaceId: string, agentId: string): Promise<AgentContext | undefined> {
+    const agent = await this.repo.getById(workspaceId, agentId);
+    return agent ? { paths: agent.contextPaths } : undefined;
+  }
+
+  /** Paths arrive validated and de-duplicated (route schema); stored in the given order. */
+  async setContext(workspaceId: string, agentId: string, paths: string[]): Promise<AgentContext | undefined> {
+    const agent = await this.repo.getById(workspaceId, agentId);
+    if (!agent) return undefined;
+    await this.repo.setContextPaths(agentId, paths);
+    return { paths };
+  }
+
   async setSkills(
     workspaceId: string,
     agentId: string,

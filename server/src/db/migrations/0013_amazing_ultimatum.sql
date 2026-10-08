@@ -1,0 +1,1 @@
+ALTER TABLE "agents" ADD COLUMN "context_paths" jsonb DEFAULT '[]'::jsonb NOT NULL;
