@@ -93,3 +93,20 @@ describe("RunHistory — run cost", () => {
     expect(screen.queryByText(/\$/)).not.toBeInTheDocument();
   });
 });
+
+describe("RunHistory — severity icons", () => {
+  it("a run tile shows an icon and count per present severity, with no click needed", () => {
+    render(
+      <NextIntlClientProvider locale="en" messages={{ prReview: messages }}>
+        <RunHistory
+          runs={[run({ status: "done", findings_count: 3 })]}
+          onOpenTrace={() => {}}
+          severityByRun={{ "run-1": { CRITICAL: 1, WARNING: 2, SUGGESTION: 0 } }}
+        />
+      </NextIntlClientProvider>,
+    );
+    expect(screen.getByLabelText("1 Critical")).toBeInTheDocument();
+    expect(screen.getByLabelText("2 Warning")).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Suggestion/)).not.toBeInTheDocument();
+  });
+});

@@ -24,4 +24,15 @@ export const s = {
     color: "var(--text-secondary)",
   } satisfies CSSProperties,
   list: { display: "flex", flexDirection: "column", gap: 12 } satisfies CSSProperties,
+  summary: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    flexWrap: "wrap",
+    marginBottom: 12,
+  } satisfies CSSProperties,
+  summaryDot: { color: "var(--text-muted)", fontSize: 13 } satisfies CSSProperties,
+  filterGroup: { display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" } satisfies CSSProperties,
+  /** An active severity filter takes its level's colour so the state reads at a glance. */
+  activeFilter: (color: string, bg: string): CSSProperties => ({ color, borderColor: color, background: bg }),
 } as const;

@@ -92,7 +92,7 @@
     "findingOutcomes": "Finding outcomes",
     "outcome": {
       "accepted": "Accepted",
-      "dismissed": "Dismissed",
+      "dismissed": "Rejected",
       "pending": "Pending"
     },
     "sharePct": "({pct}%)",
