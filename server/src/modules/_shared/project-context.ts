@@ -49,6 +49,27 @@ export function contextDocsFrom(files: readonly TrackedFile[]): ContextDocMeta[]
     .sort((a, b) => CONTEXT_FOLDERS.indexOf(a.folder) - CONTEXT_FOLDERS.indexOf(b.folder) || a.path.localeCompare(b.path));
 }
 
+/**
+ * Push a document's Markdown headings two levels down (`#` → `###`, capped at
+ * `######`) so they never sit at the level of the prompt's own `## …` sections.
+ * Lines inside fenced code blocks are left alone (a shell `# comment` is not a heading).
+ */
+export function demoteHeadings(markdown: string): string {
+  let fence: string | null = null;
+  return markdown
+    .split('\n')
+    .map((line) => {
+      const marker = /^\s*(```|~~~)/.exec(line)?.[1];
+      if (marker) {
+        fence = fence === null ? marker : fence === marker ? null : fence;
+        return line;
+      }
+      if (fence !== null) return line;
+      return line.replace(/^(#{1,6})(?=\s)/, (h) => '#'.repeat(Math.min(6, h.length + 2)));
+    })
+    .join('\n');
+}
+
 export interface PackedContext {
   /** One block per document, each starting with its path, in the given order. */
   blocks: string[];
@@ -68,7 +89,7 @@ export function packContext(docs: readonly { path: string; body: string }[], bud
   const out: PackedContext = { blocks: [], read: [], cut: null, skipped: [] };
   let left = budgetTokens * CHARS_PER_TOKEN;
   for (const doc of docs) {
-    const text = `Source: ${doc.path}\n\n${doc.body.trim()}`;
+    const text = `Source: ${doc.path}\n\n${demoteHeadings(doc.body.trim())}`;
     if (out.cut !== null || left <= 0) {
       out.skipped.push(doc.path);
     } else if (text.length <= left) {

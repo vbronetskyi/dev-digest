@@ -56,8 +56,9 @@ Attaching
 Reviewing
 - **AC-8** WHEN a review runs with an agent that has context paths, the system shall put
   each attached path that is in the AC-1 list of that repository into the prompt, in the
-  saved order, as its own untrusted block whose first line names the path; the path is
-  never placed in a block attribute.
+  saved order, as its own untrusted block whose first line names the path, with the
+  document's Markdown headings moved two levels down so none sits at the prompt's own
+  section level; the path is never placed in a block attribute.
 - **AC-9** IF an attached path is not in the AC-1 list of the reviewed repository, THEN
   the system shall leave it out, log it and continue the review.
 - **AC-10** IF the attached documents exceed 8,000 tokens together (characters / 4),
@@ -140,3 +141,6 @@ tab shows the active repository (the one in the repo switcher).
   `specs_read` on failed runs, the rule conditional on context being present (it
   contradicted "prompt unchanged"), safe Markdown in the UI, which repository the tab
   shows. Compound criteria split: 13 → 22.
+- 2026-10-08 — AC-8 extended during implementation: a live run's trace showed a document's
+  `## Modules`, `## Data` headings at the same level as the prompt's `## Diff to review`,
+  so document headings are now demoted. The behaviour changed, so the spec changed first.

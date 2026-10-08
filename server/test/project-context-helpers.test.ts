@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { contextDocsFrom, contextFolderOf, packContext } from '../src/modules/_shared/project-context.js';
+import { contextDocsFrom, contextFolderOf, demoteHeadings, packContext } from '../src/modules/_shared/project-context.js';
 
 // SPEC-01 — the pure part of the Project Context Folder.
 describe('contextFolderOf', () => {
@@ -57,5 +57,26 @@ describe('packContext', () => {
     const packed = packContext([doc('docs/huge.md', 100_000)], 8000);
     expect(packed.cut).toBe('docs/huge.md');
     expect(packed.blocks[0]!.length).toBeLessThan(8000 * 4 + 60);
+  });
+});
+
+describe('demoteHeadings', () => {
+  it('AC-8: keeps document headings below the prompt\'s own ## sections, leaving code fences alone', () => {
+    const doc = ['# Architecture', '## Modules', '###### Deep', 'text # not a heading', '```sh', '# a shell comment', '```', '## Data'].join('\n');
+    expect(demoteHeadings(doc).split('\n')).toEqual([
+      '### Architecture',
+      '#### Modules',
+      '###### Deep',
+      'text # not a heading',
+      '```sh',
+      '# a shell comment',
+      '```',
+      '#### Data',
+    ]);
+  });
+
+  it('AC-8: the packed block carries the demoted headings', () => {
+    const packed = packContext([{ path: 'server/docs/architecture.md', body: '## Modules\nNo cross-module imports.' }]);
+    expect(packed.blocks[0]).toBe('Source: server/docs/architecture.md\n\n#### Modules\nNo cross-module imports.');
   });
 });
