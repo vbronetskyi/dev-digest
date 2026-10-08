@@ -17,6 +17,8 @@ export const skills = pgTable('skills', {
   enabled: boolean('enabled').notNull().default(true),
   version: integer('version').notNull().default(1),
   evidenceFiles: jsonb('evidence_files').$type<string[]>(),
+  /** Where an imported skill came from (raw SKILL.md URL); null for manual skills. */
+  sourceUrl: text('source_url'),
   createdAt: now(),
 });
 

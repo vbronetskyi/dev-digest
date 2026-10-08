@@ -128,8 +128,73 @@ export const Skill = z.object({
   enabled: z.boolean(),
   version: z.number().int(),
   evidence_files: z.array(z.string()).nullish(),
+  /** Raw SKILL.md URL an imported skill came from; null for manual skills. */
+  source_url: z.string().nullish(),
+  created_at: z.string().nullish(),
 });
 export type Skill = z.infer<typeof Skill>;
+
+/** SKILL.md naming rule: lowercase words joined by hyphens, max 64 chars. */
+export const SkillName = z
+  .string()
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'lowercase letters, digits and single hyphens')
+  .max(64);
+
+/** Bodies are capped so one skill cannot swamp the reviewer's context. */
+export const SKILL_BODY_MAX_CHARS = 20000;
+
+export const SkillInput = z.object({
+  name: SkillName,
+  description: z.string().trim().min(1).max(1024),
+  type: SkillType,
+  body: z.string().trim().min(1).max(SKILL_BODY_MAX_CHARS),
+  enabled: z.boolean().optional(),
+});
+export type SkillInput = z.infer<typeof SkillInput>;
+
+export const SkillUpdate = SkillInput.partial();
+export type SkillUpdate = z.infer<typeof SkillUpdate>;
+
+export const SkillListItem = Skill.extend({
+  /** How many agents have this skill linked. */
+  linked_agents: z.number().int(),
+});
+export type SkillListItem = z.infer<typeof SkillListItem>;
+
+export const SkillVersion = z.object({
+  version: z.number().int(),
+  body: z.string(),
+  created_at: z.string(),
+});
+export type SkillVersion = z.infer<typeof SkillVersion>;
+
+export const SkillStats = z.object({
+  linked_agents: z.array(z.object({ id: z.string(), name: z.string() })),
+  /** Review runs whose prompt included this skill (any version). */
+  runs_used: z.number().int(),
+  last_used_at: z.string().nullable(),
+});
+export type SkillStats = z.infer<typeof SkillStats>;
+
+export const SkillImportRequest = z.object({
+  url: z.string().url().max(2048),
+  /** Optional overrides chosen on the preview screen. */
+  name: SkillName.optional(),
+  type: SkillType.optional(),
+});
+export type SkillImportRequest = z.infer<typeof SkillImportRequest>;
+
+export const SkillImportPreview = z.object({
+  name: z.string(),
+  description: z.string(),
+  body: z.string(),
+  type: SkillType,
+  /** The URL actually fetched (GitHub page links are rewritten to raw). */
+  source_url: z.string(),
+  /** Things a human should look at before importing third-party text. */
+  warnings: z.array(z.string()),
+});
+export type SkillImportPreview = z.infer<typeof SkillImportPreview>;
 
 export const CommunitySkill = z.object({
   name: z.string(),
