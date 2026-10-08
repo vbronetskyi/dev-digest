@@ -50,6 +50,19 @@ export function wrapSkill(skill: SkillPart): string {
   return `<skill name="${safeName}">\n${safeBody}\n</skill>`;
 }
 
+/** The PR's derived intent (L03). Derived from author-controlled text, so untrusted. */
+export interface IntentPart {
+  intent: string;
+  in_scope: string[];
+  out_of_scope: string[];
+}
+
+/** Render the intent as plain lines for its untrusted block. */
+export function renderIntent(intent: IntentPart): string {
+  const list = (items: string[]) => (items.length ? items.map((i) => `- ${i}`).join('\n') : '- (none stated)');
+  return `Intent: ${intent.intent}\nIn scope:\n${list(intent.in_scope)}\nOut of scope:\n${list(intent.out_of_scope)}`;
+}
+
 export function wrapUntrusted(label: string, content: string): string {
   // strip any attempt to close our own delimiter
   const safe = content.replaceAll('</untrusted>', '<\\/untrusted>');
@@ -89,6 +102,12 @@ export interface PromptParts {
    * undefined → section omitted.
    */
   prDescription?: string;
+  /**
+   * What the PR is for and where its edges are, derived before the review.
+   * Lets findings speak to the author's goal; never narrows what gets reported
+   * (the injection guard covers it). Omitted when undefined.
+   */
+  intent?: IntentPart;
   /** The unified diff / user task (untrusted content). */
   diff: string;
   /** Optional task framing line, e.g. "Review PR #482 '…'". */
@@ -131,6 +150,10 @@ export function assemblePrompt(parts: PromptParts): AssembledPrompt {
   if (prDescription) {
     userSections.push(`## PR description\n${wrapUntrusted('pr-description', prDescription)}`);
   }
+  const intentBlock = parts.intent ? wrapUntrusted('intent', renderIntent(parts.intent)) : undefined;
+  if (intentBlock) {
+    userSections.push(`## PR intent (derived from the title, description and diff — unverified)\n${intentBlock}`);
+  }
   if (skillsBlock) userSections.push(`## Skills / rules\n${skillsBlock}`);
   if (memoryBlock) userSections.push(`## Relevant memory\n${memoryBlock}`);
   if (parts.repoMap && parts.repoMap.trim().length > 0) {
@@ -159,6 +182,7 @@ export function assemblePrompt(parts: PromptParts): AssembledPrompt {
     callers: parts.callers ?? null,
     repo_map: parts.repoMap ?? null,
     pr_description: prDescription ?? null,
+    intent: intentBlock ?? null,
     user,
   };
 

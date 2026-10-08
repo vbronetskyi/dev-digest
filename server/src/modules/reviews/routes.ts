@@ -13,6 +13,8 @@ import { ReviewService } from './service.js';
  *   GET    /runs/:id/events                            → SSE stream of RunEvent (replay-first)
  *   GET    /runs/:id/trace                             → the single-document RunTrace
  *   GET    /runs/:id/review                            → run + PR + its review (MCP get_findings)
+ *   GET    /pulls/:id/intent                           → stored PR intent or null (L03)
+ *   POST   /pulls/:id/intent                           → derive it now (one model call)
  *   GET    /pulls/:id/reviews                          → persisted reviews + findings for a PR
  *   POST   /findings/:id/(accept|dismiss)              → finding actions
  */
@@ -125,6 +127,21 @@ export default async function reviewsRoutes(appBase: FastifyInstance) {
     if (!trace) throw new NotFoundError('Run trace not found');
     return trace;
   });
+
+  // ---- PR intent (L03): read is free; deriving is one paid model call ------
+  app.get('/pulls/:id/intent', { schema: { params: IdParams } }, async (req) => {
+    const { workspaceId } = await getContext(container, req);
+    return service.getIntent(workspaceId, req.params.id);
+  });
+
+  app.post(
+    '/pulls/:id/intent',
+    { schema: { params: IdParams }, config: { rateLimit: { max: 10, timeWindow: '1 minute' } } },
+    async (req) => {
+      const { workspaceId } = await getContext(container, req);
+      return service.deriveIntent(workspaceId, req.params.id);
+    },
+  );
 
   // ---- One run with its PR and review (MCP get_findings, deep links) ------
   app.get('/runs/:id/review', { schema: { params: IdParams } }, async (req) => {

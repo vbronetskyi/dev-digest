@@ -4,11 +4,11 @@ import type {
   ConventionAcceptResult,
   ConventionCandidate,
   ConventionExtraction,
-  LLMProvider,
 } from '@devdigest/shared';
 import type { Container } from '../../platform/container.js';
-import { AppError, ConfigError, ExternalServiceError, NotFoundError } from '../../platform/errors.js';
-import { defaultFeatureModel, getFeatureModelOverride } from '../_shared/feature-models.js';
+import { AppError, NotFoundError } from '../../platform/errors.js';
+import { resolveFeatureLlm } from '../_shared/feature-models.js';
+import { withDeadline } from '../_shared/deadline.js';
 import { ConventionsRepository } from './repository.js';
 import {
   CALL_DEADLINE_MS,
@@ -50,19 +50,6 @@ const Extraction = z.object({
   ),
 });
 
-/** Resolve or reject within `ms`. The underlying request is not aborted — see constants. */
-async function withDeadline<T>(work: Promise<T>, ms: number, what: string): Promise<T> {
-  let timer: NodeJS.Timeout | undefined;
-  const deadline = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => reject(new ExternalServiceError(`${what} took longer than ${ms / 1000}s`)), ms);
-  });
-  try {
-    return await Promise.race([work, deadline]);
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
 /**
  * L02 — conventions extractor. Two model calls over the cloned repo: pick files
  * from repo-intel's top-ranked ones, then extract rules that each quote one of
@@ -87,7 +74,7 @@ export class ConventionsService {
     if (candidates.length === 0) {
       throw new AppError('repo_not_indexed', 'The repository is not indexed yet — wait for the Indexed badge, then scan.', 409);
     }
-    const { llm, model } = await this.resolveModel(workspaceId);
+    const { llm, model } = await resolveFeatureLlm(this.container, workspaceId, 'conventions', OPENROUTER_FALLBACK_MODEL);
     const sessionId = `${repo.fullName}:conventions`;
 
     const selection = await withDeadline(
@@ -164,22 +151,6 @@ export class ConventionsService {
 
   async reject(workspaceId: string, id: string): Promise<void> {
     if (!(await this.repo.delete(workspaceId, id))) throw new NotFoundError('Convention not found');
-  }
-
-  /**
-   * Settings override first. Otherwise the registry default, and when its provider
-   * has no key, OpenRouter — the provider most workspaces here are set up with.
-   */
-  private async resolveModel(workspaceId: string): Promise<{ llm: LLMProvider; model: string }> {
-    const override = await getFeatureModelOverride(this.container, workspaceId, 'conventions');
-    if (override) return { llm: await this.container.llm(override.provider), model: override.model };
-    const fallback = defaultFeatureModel('conventions');
-    try {
-      return { llm: await this.container.llm(fallback.provider), model: fallback.model };
-    } catch (err) {
-      if (!(err instanceof ConfigError)) throw err;
-    }
-    return { llm: await this.container.llm('openrouter'), model: OPENROUTER_FALLBACK_MODEL };
   }
 
   /** Read the chosen files from the clone within the character budgets; unreadable files are skipped. */

@@ -134,7 +134,10 @@ d('L02 skills (Testcontainers pg)', () => {
     const runId = res.json().runs[0].run_id;
     await waitForPrRuns(pg.handle.db, pr!.id, { expected: 1 });
 
-    const call = llm.calls.slice(before).find((c) => c.method === 'completeStructured')!;
+    // The reviewer's call, not the intent call (L03) that precedes it.
+    const call = llm.calls
+      .slice(before)
+      .find((c) => c.method === 'completeStructured' && (c.req as { schemaName?: string }).schemaName !== 'PrIntent')!;
     const user = (call.req as { messages: { role: string; content: string }[] }).messages.find((m) => m.role === 'user')!.content;
     expect(user.indexOf('<skill name="skill-bravo">')).toBeGreaterThan(-1);
     expect(user.indexOf('<skill name="skill-alpha">')).toBeGreaterThan(user.indexOf('<skill name="skill-bravo">'));

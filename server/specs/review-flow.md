@@ -20,6 +20,8 @@ every enabled agent.
    the PR files from GitHub (then persisted). No source → `EmptyDiffError`.
    If loading fails, **every** queued run is marked `failed` with the error —
    an empty diff is never sent to the model.
+   Then the PR intent is taken from `pr_intent` when it matches the head, or
+   derived (one call) — see `intent.md`. A failure there only drops the block.
 2. Per agent, sequentially:
    - resolve the agent's LLM provider (a missing key fails that run only);
    - gather repo context unless the agent opted out of repo-intel: callers of

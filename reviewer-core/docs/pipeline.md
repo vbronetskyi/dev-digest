@@ -12,6 +12,8 @@ inputs ─► assemblePrompt ─► strategy ─► LLM (structured) ─► redu
 
 - trusted: the agent's system prompt, the model id, the task line;
 - workspace-authored: skills (`{name, body}`, in the agent's order) and memory;
+- derived: the PR intent (`{intent, in_scope, out_of_scope}`, L03) — rendered as
+  untrusted, because it is derived from the author's title and description;
 - untrusted: the parsed unified diff, the PR description, optional repo map,
   callers digest and specs — all of it already resolved to text;
 - control: `strategy`, retry budget, map-reduce threshold, `sessionId`,

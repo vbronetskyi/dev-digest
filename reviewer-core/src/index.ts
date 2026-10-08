@@ -19,6 +19,8 @@ export {
   type SkillPart,
   type PromptParts,
   type AssembledPrompt,
+  renderIntent,
+  type IntentPart,
 } from './prompt.js';
 
 // Citation grounding — the mandatory mechanical gate for diff findings.

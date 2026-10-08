@@ -242,11 +242,13 @@ d('A2 reviews + agents (Testcontainers pg)', () => {
     const runId = res.json().runs[0].run_id;
     await waitForPrRuns(pg.handle.db, pr.id, { expected: 1 });
 
-    // The mock bills $0.001 per call; with a single run every call belongs to it.
+    // The mock bills $0.001 per call; with a single run every reviewer call belongs
+    // to it. The intent call (L03) is billed to pr_intent, not to the run.
     const runs = (await app.inject({ method: 'GET', url: `/pulls/${pr.id}/runs` })).json();
     expect(runs).toHaveLength(1);
-    expect(llm.calls.length).toBeGreaterThan(0);
-    const expected = 0.001 * llm.calls.length;
+    const reviewerCalls = llm.calls.filter((c) => (c.req as { schemaName?: string }).schemaName !== 'PrIntent');
+    expect(reviewerCalls.length).toBeGreaterThan(0);
+    const expected = 0.001 * reviewerCalls.length;
     expect(runs[0].cost_usd).toBeCloseTo(expected, 10);
 
     const trace = (await app.inject({ method: 'GET', url: `/runs/${runId}/trace` })).json();

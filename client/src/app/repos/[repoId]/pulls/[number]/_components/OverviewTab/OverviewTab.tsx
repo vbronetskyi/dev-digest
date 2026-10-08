@@ -3,6 +3,7 @@
 import React from "react";
 import { SectionLabel } from "@devdigest/ui";
 import { BlastRadiusCard } from "../BlastRadiusCard";
+import { IntentCard } from "../IntentCard";
 import { s } from "./styles";
 
 interface OverviewTabProps {
@@ -10,9 +11,10 @@ interface OverviewTabProps {
   prId: string;
   repo: string | null;
   defaultBranch: string;
+  headSha: string | null | undefined;
 }
 
-export function OverviewTab({ prBody, prId, repo, defaultBranch }: OverviewTabProps) {
+export function OverviewTab({ prBody, prId, repo, defaultBranch, headSha }: OverviewTabProps) {
   return (
     <>
       {prBody && (
@@ -21,6 +23,7 @@ export function OverviewTab({ prBody, prId, repo, defaultBranch }: OverviewTabPr
           <div style={s.descriptionBox}>{prBody}</div>
         </section>
       )}
+      <IntentCard prId={prId} headSha={headSha} />
       {repo && <BlastRadiusCard prId={prId} repo={repo} defaultBranch={defaultBranch} />}
     </>
   );
