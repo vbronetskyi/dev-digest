@@ -85,7 +85,10 @@ export class Container {
   constructor(config: AppConfig, db: Db, private overrides: ContainerOverrides = {}) {
     this.config = config;
     this.db = db;
-    this.secrets = overrides.secrets ?? new LocalSecretsProvider(config.secretsPath);
+    // `import 'dotenv/config'` puts server/.env into process.env even under vitest;
+    // a test must never fall through to a real key and call a paid API.
+    this.secrets =
+      overrides.secrets ?? new LocalSecretsProvider(config.secretsPath, config.nodeEnv === 'test' ? {} : process.env);
     this.auth = overrides.auth ?? new LocalNoAuthProvider(db);
     this.runBus = runBus;
     this.jobs = new JobRunner(db);

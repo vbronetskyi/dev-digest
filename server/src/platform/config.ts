@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { z } from 'zod';
-import { homedir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import { join, isAbsolute, resolve } from 'node:path';
 
 /**
@@ -71,7 +71,12 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     apiPort: parsed.API_PORT,
     webPort: parsed.WEB_PORT,
     cloneDir,
-    secretsPath: join(homedir(), '.devdigest', 'secrets.json'),
+    // Tests never see the developer's real keys: a per-process scratch store
+    // instead of ~/.devdigest/secrets.json (the container also drops env keys).
+    secretsPath:
+      parsed.NODE_ENV === 'test'
+        ? join(tmpdir(), `devdigest-test-secrets-${process.pid}.json`)
+        : join(homedir(), '.devdigest', 'secrets.json'),
     nodeEnv: parsed.NODE_ENV,
     logLevel: parsed.LOG_LEVEL ?? (parsed.NODE_ENV === 'test' ? 'silent' : 'info'),
     webOrigin: `http://localhost:${parsed.WEB_PORT}`,
