@@ -44,4 +44,5 @@ pnpm test       # vitest + jsdom, fetch mocked — no API or browser needed
 - Changing a route or the data a page loads → `specs/pages.md`
 - Rendering money / run cost → `specs/run-cost-display.md`
 - Severity counts, filters or the PR list findings preview → `specs/findings-by-severity.md`
+- Skills Lab, the agent Skills tab or skills in the trace → `specs/skills-ui.md`
 - Before any task in this package → `insights/INSIGHTS.md`

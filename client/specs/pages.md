@@ -7,7 +7,8 @@
 | `/repos/:repoId/pulls` | PR list with status filters, sort and refresh | `usePulls` → `GET /repos/:id/pulls`; index badge → `GET /repos/:id/index-state` |
 | `/repos/:repoId/pulls/:number` | PR detail: Overview · Agent runs · Files changed, plus the trace drawer | see below |
 | `/agents` | Reviewer agents | `GET /agents` |
-| `/agents/:id` | Agent editor | `GET/PUT /agents/:id` |
+| `/agents/:id` | Agent editor: Config · Skills (`?tab=`) | `GET/PUT /agents/:id`; Skills tab → `GET/POST /agents/:id/skills`, `GET /skills` |
+| `/skills` | Skills Lab: library + editor (`?skill=`, `?tab=`) | `useSkills` → `GET /skills`; editor → `GET/PUT/DELETE /skills/:id`, `/versions`, `/stats`; import → `POST /skills/import/preview`, `POST /skills/import` |
 | `/settings/:section` | API keys, models | `GET /settings`, `GET /settings/secrets-status`, `PUT /settings`; model lists → `GET /providers/:id/models` |
 
 ## PR list — `/repos/:repoId/pulls`
