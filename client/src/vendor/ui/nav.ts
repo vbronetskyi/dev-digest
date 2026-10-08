@@ -64,7 +64,7 @@ export const SHORTCUTS: ShortcutDef[] = [
   { keys: "g c", label: "Go to Conventions", group: "Navigation" },
   { keys: "j / k", label: "Next / previous finding", group: "Findings" },
   { keys: "a", label: "Accept finding", group: "Findings" },
-  { keys: "d", label: "Dismiss finding", group: "Findings" },
+  { keys: "d", label: "Reject finding", group: "Findings" },
 ];
 
 /** Resolve an :repoId-templated href against the active repo id. */
