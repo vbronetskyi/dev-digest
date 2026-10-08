@@ -1,4 +1,4 @@
-import { and, asc, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray } from 'drizzle-orm';
 import type { Db } from '../../db/client.js';
 import * as t from '../../db/schema.js';
 import type { CiFailOn, Provider, ReviewStrategy } from '@devdigest/shared';
@@ -226,11 +226,24 @@ export class AgentsRepository {
    * order = index. Used by the "Skills" editor tab (attach/reorder). Skills not in
    * the list are unlinked.
    */
+  /** Replace the agent's links in one transaction, so a failed insert cannot leave it with none. */
   async setSkills(agentId: string, skillIds: string[]): Promise<void> {
-    await this.db.delete(t.agentSkills).where(eq(t.agentSkills.agentId, agentId));
-    if (skillIds.length === 0) return;
-    await this.db
-      .insert(t.agentSkills)
-      .values(skillIds.map((skillId, i) => ({ agentId, skillId, order: i })));
+    await this.db.transaction(async (tx) => {
+      await tx.delete(t.agentSkills).where(eq(t.agentSkills.agentId, agentId));
+      if (skillIds.length === 0) return;
+      await tx
+        .insert(t.agentSkills)
+        .values(skillIds.map((skillId, i) => ({ agentId, skillId, order: i })));
+    });
+  }
+
+  /** Which of `skillIds` belong to the workspace (links must never cross workspaces). */
+  async skillIdsInWorkspace(workspaceId: string, skillIds: string[]): Promise<Set<string>> {
+    if (skillIds.length === 0) return new Set();
+    const rows = await this.db
+      .select({ id: t.skills.id })
+      .from(t.skills)
+      .where(and(eq(t.skills.workspaceId, workspaceId), inArray(t.skills.id, skillIds)));
+    return new Set(rows.map((r) => r.id));
   }
 }
