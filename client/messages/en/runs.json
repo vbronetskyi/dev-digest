@@ -31,6 +31,7 @@
     "config": {
       "model": "Model",
       "provider": "Provider",
+      "skills": "Skills",
       "memoryPulled": "Memory pulled",
       "specsRead": "Specs read",
       "items": "{count, plural, one {# item} other {# items}}",

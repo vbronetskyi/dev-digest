@@ -13,7 +13,7 @@
     },
     "empty": {
       "title": "No skills yet",
-      "body": "Import a skill from a file, a URL, or the community catalog.",
+      "body": "Create one from scratch, or import a SKILL.md from a URL.",
       "cta": "Import from file"
     },
     "selectPrompt": {
@@ -32,24 +32,25 @@
   },
   "drawer": {
     "title": "Add a skill",
-    "subtitle": "Import from a file, a URL, or search vetted community skills",
+    "subtitle": "From a file or a URL. Imported skills are saved disabled until you vet them.",
     "tabs": {
       "file": "From file",
-      "url": "From URL",
-      "community": "Community"
+      "url": "From URL"
     },
     "importFailed": "Import failed"
   },
   "file": {
-    "nameLabel": "Skill name",
-    "nameHint": "Optional — derived from the first heading if blank.",
-    "namePlaceholder": "pr-quality-rubric",
-    "bodyLabel": "Skill body (Markdown)",
-    "bodyHint": "Pasted content is wrapped as untrusted data — never executed as instructions.",
-    "bodyPlaceholder": "# Rule\nDescribe the rule…",
-    "importing": "Importing…",
+    "pick": "Choose a .md file",
+    "picked": "{name} · {size}",
+    "or": "or paste it",
+    "bodyLabel": "SKILL.md contents",
+    "bodyHint": "Parsed on the server like a URL import: frontmatter gives the name and description.",
+    "bodyPlaceholder": "---\nname: my-rule\ndescription: What it checks\n---\n# Rule\nDescribe the rule…",
+    "tooLarge": "The file is larger than 256 KB.",
     "import": "Import skill",
-    "success": "Imported \"{name}\" (stored as untrusted data)."
+    "source": "From file",
+    "pasted": "pasted text",
+    "success": "Imported \"{name}\". Disabled until you vet + enable it."
   },
   "url": {
     "label": "Skill URL",
@@ -84,7 +85,8 @@
       "manual": "Manual",
       "extracted": "Extracted",
       "community": "Community",
-      "imported_url": "Imported"
+      "imported_url": "Imported",
+      "imported_file": "File"
     }
   },
   "preview": {
@@ -93,9 +95,84 @@
     "disabled": "Disabled",
     "save": "Save",
     "edit": "Edit",
-    "untrustedNotice": "This skill came from an untrusted source. Its body is stored as data (delimiter-wrapped) and must be vetted before it is enabled for an agent.",
+    "untrustedNotice": "This skill came from outside the workspace. Read it before enabling: once enabled, every agent that links it gets this text in its prompt.",
     "bodyLabel": "Skill body (Markdown)",
     "bodyHint": "Saving a changed body creates a new immutable version.",
-    "version": "v{version}"
+    "version": "v{version}",
+    "title": "Preview",
+    "subtitle": "What the reviewing agent receives: the body, delimited as its own block after a preamble that stops a skill from dropping findings.",
+    "rendered": "Rendered",
+    "raw": "Prompt block"
+  },
+  "list": {
+    "create": "Create from scratch",
+    "noMatch": "No skills match",
+    "agents": "{count, plural, =0 {not linked} one {# agent} other {# agents}}",
+    "enable": "Enable {name}",
+    "disable": "Disable {name}"
+  },
+  "editor": {
+    "tabs": {
+      "config": "Config",
+      "preview": "Preview",
+      "stats": "Stats",
+      "versions": "Versions"
+    },
+    "newTitle": "New skill"
+  },
+  "config": {
+    "title": "Configuration",
+    "name": "Name",
+    "nameHint": "Lowercase words joined by hyphens — the name the agent sees in its prompt.",
+    "description": "Description",
+    "type": "Type",
+    "bodyHint": "The only text sent to the model. Everything else is metadata.",
+    "tokens": "≈{count} tokens",
+    "create": "Create skill",
+    "cancel": "Cancel",
+    "snapshotNote": "A changed body is saved as v{version}.",
+    "unchanged": "No changes",
+    "source": "Imported from",
+    "deleteTitle": "Delete skill",
+    "deleteBody": "Removes it from every agent that links it. This can't be undone.",
+    "delete": "Delete",
+    "deleteConfirm": "Delete \"{name}\"? It will be unlinked from every agent.",
+    "saved": "Saved",
+    "created": "Skill created",
+    "namePlaceholder": "pr-quality-rubric"
+  },
+  "stats": {
+    "usedBy": "USED BY",
+    "runs": "RUNS",
+    "lastUsed": "LAST USED",
+    "agentsUnit": "{count, plural, one {agent} other {agents}}",
+    "runsHint": "Review runs whose prompt included this skill, any version.",
+    "agentsTitle": "Agents linking this skill",
+    "open": "Open",
+    "never": "never",
+    "emptyTitle": "Not linked yet",
+    "emptyBody": "Link this skill in an agent's Skills tab; runs that include it will show up here."
+  },
+  "versions": {
+    "title": "Version history",
+    "count": "{count, plural, one {# version} other {# versions}}",
+    "subtitle": "Every body change is snapshotted, so you can see exactly what a past run was told.",
+    "current": "Current",
+    "view": "View",
+    "hide": "Hide",
+    "compare": "Diff",
+    "restore": "Restore",
+    "restoreConfirm": "Restore v{version}? It is saved as a new version.",
+    "noDiff": "Identical to the current body."
+  },
+  "import": {
+    "preview": "Preview",
+    "back": "Back",
+    "warnings": "Read before importing",
+    "name": "Name",
+    "type": "Type",
+    "description": "Description",
+    "body": "Body",
+    "fetchedFrom": "Fetched from"
   }
 }

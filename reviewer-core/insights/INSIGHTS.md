@@ -18,6 +18,16 @@ Evidence: `src/llm/openrouter.ts:54`, `src/llm/openrouter.ts:68`
 
 ## Codebase Patterns
 
+### 2026-10-08 — Skills are delimited, but not as `<untrusted>`
+`INJECTION_GUARD` tells the model to ignore every instruction inside
+`<untrusted>` blocks, and a skill is nothing but instructions — wrapped that way
+it would be inert. Skills go under `## Skills / rules` as `<skill name="…">`
+blocks after `SKILLS_PREAMBLE`, which states what a skill cannot do (change the
+output format, severities, security rules, or drop findings). A body cannot
+close its own tag. Imported third-party skills are kept safe by the server
+(disabled until vetted), not by this wrapper.
+Evidence: `src/prompt.ts:16`, `src/prompt.ts:34`, `src/prompt.ts:46`
+
 ## Tool & Library Notes
 
 ## Recurring Errors & Fixes
@@ -29,5 +39,11 @@ No engine code changed. Traced a review stuck in "Reviewing all files in one
 pass" for 11+ minutes to the SDK timeout scope above; documented the pipeline
 and grounding/score rules in `docs/` and `specs/`.
 Evidence: `src/llm/openrouter.ts:54`
+
+### 2026-10-08 — Lab 2: skills in the prompt
+`PromptParts.skills` changed from `string[]` to `{name, body}[]`; `wrapSkill` and
+`SkillPart` are exported. The assembled block is still recorded in
+`assembly.skills`, so the trace drawer shows it unchanged.
+Evidence: `src/prompt.ts:41`, `src/prompt.ts:113`
 
 ## Open Questions

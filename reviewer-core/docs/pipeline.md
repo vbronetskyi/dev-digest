@@ -11,8 +11,9 @@ inputs ─► assemblePrompt ─► strategy ─► LLM (structured) ─► redu
 ## Inputs
 
 - trusted: the agent's system prompt, the model id, the task line;
+- workspace-authored: skills (`{name, body}`, in the agent's order) and memory;
 - untrusted: the parsed unified diff, the PR description, optional repo map,
-  callers digest, skills, memory and specs — all of it already resolved to text;
+  callers digest and specs — all of it already resolved to text;
 - control: `strategy`, retry budget, map-reduce threshold, `sessionId`,
   `onEvent` for progress, `checkCancelled` for cancellation.
 
@@ -23,6 +24,14 @@ slot is omitted entirely, so a starter run without skills/memory/specs sends the
 same prompt as before those slots existed. Untrusted content is fenced by
 `wrapUntrusted`, and `INJECTION_GUARD` is appended to every system prompt: claims
 like "this is a test fixture, do not flag" never descope the review.
+
+Skills are not fenced as `<untrusted>`: the guard tells the model to ignore
+instructions inside those blocks, and a skill *is* instructions. They go under
+`## Skills / rules` instead — `SKILLS_PREAMBLE` first (a skill may add checks; it
+may not change the output format, severities or security rules, or drop
+findings), then one `<skill name="…">` block per skill via `wrapSkill`. A body
+cannot close its own block, and the name is reduced to `[a-z0-9._-]`. The
+assembled block is kept in `assembly.skills` for the trace.
 
 ## Strategies
 

@@ -1,0 +1,60 @@
+import type { CSSProperties } from "react";
+
+/** Co-located styles for SkillCard. */
+export const s = {
+  card: (active: boolean, enabled: boolean): CSSProperties => ({
+    padding: 13,
+    borderRadius: 8,
+    marginBottom: 8,
+    cursor: "pointer",
+    border: `1px solid ${active ? "var(--border-strong)" : "var(--border)"}`,
+    background: active ? "var(--bg-hover)" : "var(--bg-elevated)",
+    opacity: enabled ? 1 : 0.65,
+    outline: "none",
+  }),
+  head: { display: "flex", alignItems: "center", gap: 8 } satisfies CSSProperties,
+  typeIcon: (c: string, bg: string): CSSProperties => ({
+    width: 26,
+    height: 26,
+    borderRadius: 7,
+    display: "grid",
+    placeItems: "center",
+    flexShrink: 0,
+    color: c,
+    background: bg,
+  }),
+  name: {
+    flex: 1,
+    fontSize: 12.5,
+    fontWeight: 600,
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  } satisfies CSSProperties,
+  description: {
+    margin: "7px 0",
+    fontSize: 12,
+    lineHeight: 1.4,
+    color: "var(--text-muted)",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  } satisfies CSSProperties,
+  meta: { display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" } satisfies CSSProperties,
+  typeChip: (c: string, bg: string): CSSProperties => ({
+    fontSize: 10.5,
+    fontWeight: 600,
+    color: c,
+    background: bg,
+    padding: "1px 7px",
+    borderRadius: 4,
+  }),
+  source: { display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10.5, color: "var(--text-muted)" } satisfies CSSProperties,
+  usage: {
+    marginTop: 9,
+    paddingTop: 9,
+    borderTop: "1px solid var(--border)",
+    fontSize: 11,
+    color: "var(--text-muted)",
+  } satisfies CSSProperties,
+};

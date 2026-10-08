@@ -11,12 +11,14 @@ export const skills = pgTable('skills', {
   description: text('description').notNull(),
   type: text('type', { enum: ['rubric', 'convention', 'security', 'custom'] }).notNull(),
   source: text('source', {
-    enum: ['manual', 'imported_url', 'extracted', 'community'],
+    enum: ['manual', 'imported_url', 'imported_file', 'extracted', 'community'],
   }).notNull(),
   body: text('body').notNull(),
   enabled: boolean('enabled').notNull().default(true),
   version: integer('version').notNull().default(1),
   evidenceFiles: jsonb('evidence_files').$type<string[]>(),
+  /** Where an imported skill came from (raw SKILL.md URL); null for manual skills. */
+  sourceUrl: text('source_url'),
   createdAt: now(),
 });
 

@@ -78,6 +78,10 @@ export const RunTrace = z.object({
     model: z.string(),
     pr: z.number().int().nullish(),
     source: z.enum(['local', 'ci']).default('local'),
+    /** Skills that were in the prompt, with the version used. Absent on older traces. */
+    skills: z
+      .array(z.object({ id: z.string(), name: z.string(), version: z.number().int() }))
+      .nullish(),
   }),
   stats: RunStats,
   prompt_assembly: PromptAssembly,

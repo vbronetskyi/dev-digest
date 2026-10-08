@@ -22,7 +22,7 @@ export const PluginSkill = z.object({
   name: z.string(),
   description: z.string(),
   type: z.enum(['rubric', 'convention', 'security', 'custom']),
-  source: z.enum(['manual', 'imported_url', 'extracted', 'community']),
+  source: z.enum(['manual', 'imported_url', 'imported_file', 'extracted', 'community']),
   body: z.string(),
   enabled: z.boolean(),
   evidence_files: z.array(z.string()).nullish(),

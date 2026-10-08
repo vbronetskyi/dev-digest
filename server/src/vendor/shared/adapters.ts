@@ -286,3 +286,18 @@ export interface SecretsProvider {
    */
   set?(key: SecretKey, value: string): Promise<void>;
 }
+
+/** A text document fetched from the public internet; `url` is the final URL after redirects. */
+export interface RemoteDocument {
+  url: string;
+  text: string;
+}
+
+/**
+ * Fetches public text documents (e.g. a SKILL.md to import). Implementations must
+ * refuse non-HTTPS URLs and any host that resolves to a private, loopback or
+ * link-local address — the URL comes from a user.
+ */
+export interface RemoteDocumentFetcher {
+  fetchText(url: string): Promise<RemoteDocument>;
+}

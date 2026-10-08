@@ -115,7 +115,7 @@ export type MemoryItem = z.infer<typeof MemoryItem>;
 export const SkillType = z.enum(['rubric', 'convention', 'security', 'custom']);
 export type SkillType = z.infer<typeof SkillType>;
 
-export const SkillSource = z.enum(['manual', 'imported_url', 'extracted', 'community']);
+export const SkillSource = z.enum(['manual', 'imported_url', 'imported_file', 'extracted', 'community']);
 export type SkillSource = z.infer<typeof SkillSource>;
 
 export const Skill = z.object({
@@ -128,8 +128,86 @@ export const Skill = z.object({
   enabled: z.boolean(),
   version: z.number().int(),
   evidence_files: z.array(z.string()).nullish(),
+  /** Raw SKILL.md URL an imported skill came from; null for manual skills. */
+  source_url: z.string().nullish(),
+  created_at: z.string().nullish(),
 });
 export type Skill = z.infer<typeof Skill>;
+
+/** SKILL.md naming rule: lowercase words joined by hyphens, max 64 chars. */
+export const SkillName = z
+  .string()
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'lowercase letters, digits and single hyphens')
+  .max(64);
+
+/** Bodies are capped so one skill cannot swamp the reviewer's context. */
+export const SKILL_BODY_MAX_CHARS = 20000;
+
+export const SkillInput = z.object({
+  name: SkillName,
+  description: z.string().trim().min(1).max(1024),
+  type: SkillType,
+  body: z.string().trim().min(1).max(SKILL_BODY_MAX_CHARS),
+  enabled: z.boolean().optional(),
+});
+export type SkillInput = z.infer<typeof SkillInput>;
+
+export const SkillUpdate = SkillInput.partial();
+export type SkillUpdate = z.infer<typeof SkillUpdate>;
+
+export const SkillListItem = Skill.extend({
+  /** How many agents have this skill linked. */
+  linked_agents: z.number().int(),
+});
+export type SkillListItem = z.infer<typeof SkillListItem>;
+
+export const SkillVersion = z.object({
+  version: z.number().int(),
+  body: z.string(),
+  created_at: z.string(),
+});
+export type SkillVersion = z.infer<typeof SkillVersion>;
+
+export const SkillStats = z.object({
+  linked_agents: z.array(z.object({ id: z.string(), name: z.string() })),
+  /** Review runs whose prompt included this skill (any version). */
+  runs_used: z.number().int(),
+  last_used_at: z.string().nullable(),
+});
+export type SkillStats = z.infer<typeof SkillStats>;
+
+export const SkillImportRequest = z.object({
+  url: z.string().url().max(2048),
+  /** Optional overrides chosen on the preview screen. */
+  name: SkillName.optional(),
+  type: SkillType.optional(),
+});
+export type SkillImportRequest = z.infer<typeof SkillImportRequest>;
+
+export const SkillImportPreview = z.object({
+  name: z.string(),
+  description: z.string(),
+  body: z.string(),
+  type: SkillType,
+  /** The URL actually fetched (GitHub page links are rewritten to raw); null for a file. */
+  source_url: z.string().nullable(),
+  /** Things a human should look at before importing third-party text. */
+  warnings: z.array(z.string()),
+});
+export type SkillImportPreview = z.infer<typeof SkillImportPreview>;
+
+/** Same cap as a fetched SKILL.md (256 KB). */
+export const SKILL_FILE_MAX_CHARS = 256 * 1024;
+
+/** A SKILL.md the user uploads or pastes; parsed and previewed like a URL import. */
+export const SkillFileImport = z.object({
+  text: z.string().min(1).max(SKILL_FILE_MAX_CHARS),
+  filename: z.string().max(255).optional(),
+  /** Optional overrides chosen on the preview screen. */
+  name: SkillName.optional(),
+  type: SkillType.optional(),
+});
+export type SkillFileImport = z.infer<typeof SkillFileImport>;
 
 export const CommunitySkill = z.object({
   name: z.string(),
@@ -150,6 +228,34 @@ export const ConventionCandidate = z.object({
   accepted: z.boolean(),
 });
 export type ConventionCandidate = z.infer<typeof ConventionCandidate>;
+
+/** Result of one extraction pass over a repo. */
+export const ConventionExtraction = z.object({
+  /** Every candidate stored for the repo after the pass: new ones plus earlier accepted ones. */
+  candidates: z.array(ConventionCandidate),
+  /** Files the model actually read. */
+  sampled_files: z.array(z.string()),
+  /** Conventions dropped because their snippet was not found in the cited file. */
+  dropped: z.number().int(),
+  model: z.string(),
+  /** USD billed for both model calls; null when the provider reported no cost. */
+  cost_usd: z.number().nullable(),
+});
+export type ConventionExtraction = z.infer<typeof ConventionExtraction>;
+
+/** "Edit first" overrides; both optional — without them the rule and a derived name are used. */
+export const ConventionAcceptRequest = z.object({
+  rule: z.string().trim().min(1).max(500).optional(),
+  name: SkillName.optional(),
+});
+export type ConventionAcceptRequest = z.infer<typeof ConventionAcceptRequest>;
+
+export const ConventionAcceptResult = z.object({
+  convention: ConventionCandidate,
+  skill_id: z.string(),
+  skill_name: z.string(),
+});
+export type ConventionAcceptResult = z.infer<typeof ConventionAcceptResult>;
 
 // ---- Agents ----
 // 'openrouter' routes through the OpenAI-compatible API (OpenAIProvider with a
