@@ -36,6 +36,7 @@ then:
 - `usePrRuns` → `GET /pulls/:id/runs` — the timeline (every run, any status).
 - `usePrActiveRuns` → `GET /pulls/:id/runs/active` — polled while runs are live.
 - Trace drawer (`?trace=<runId>`) → `GET /runs/:id/trace`, live log over SSE.
+- Files changed tab → `useSmartDiff` → `GET /pulls/:id/smart-diff`.
 
 **Overview tab** — the PR description, the intent card and the blast radius card
 (`blast-radius.md`), loaded after the PR detail. The intent card reads
@@ -53,5 +54,8 @@ note when the PR head moved since.
   Accept / Dismiss and a "hide low confidence" toggle. The newest run is expanded
   by default.
 
+**Files changed tab** (`?tab=diff`) — Smart order or Original order, finding
+markers and the split banner (`smart-diff.md`), plus GitHub comments.
+
 No page triggers an LLM call by being opened. Model calls happen only from
-**Run Review**.
+**Run Review** and the intent card's **Derive**.
