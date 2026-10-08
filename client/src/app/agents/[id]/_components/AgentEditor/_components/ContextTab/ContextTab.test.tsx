@@ -102,6 +102,7 @@ describe("ContextTab", () => {
     h.paths = ["specs/public-api.md"];
     renderTab();
     expect(screen.getByText(/acme\/api is not cloned yet/)).toBeTruthy();
+    expect(screen.getByText("1 attached")).toBeTruthy();
     expect(screen.queryByText("not in acme/api")).toBeNull();
   });
 });

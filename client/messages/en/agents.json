@@ -112,6 +112,7 @@
   "context": {
     "title": "Project context",
     "attachedCount": "{attached} of {total} attached",
+    "attachedOnly": "{attached} attached",
     "orderHint": "Order matters: earlier documents come first in the review prompt. Tick to attach, drag to reorder; changes save at once.",
     "attached": "Attached",
     "available": "Available in {repo}",

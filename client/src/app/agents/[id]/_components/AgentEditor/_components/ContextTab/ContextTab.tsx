@@ -81,7 +81,9 @@ export function ContextTab({ agentId }: { agentId: string }) {
 
       <div style={s.header}>
         <h2 style={s.h2}>{t("context.title")}</h2>
-        <Badge color="var(--text-secondary)">{t("context.attachedCount", { attached: attached.length, total: docs.length })}</Badge>
+        <Badge color="var(--text-secondary)">
+          {noClone ? t("context.attachedOnly", { attached: attached.length }) : t("context.attachedCount", { attached: attached.length, total: docs.length })}
+        </Badge>
       </div>
       <p style={s.hint}>{t("context.orderHint")}</p>
 
