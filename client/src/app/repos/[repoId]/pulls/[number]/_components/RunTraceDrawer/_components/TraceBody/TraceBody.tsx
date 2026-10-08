@@ -86,21 +86,22 @@ export function TraceBody({ trace, findings }: { trace: RunTrace; findings: Find
       <FindingsSection findings={findings} />
 
       <TraceSection icon="FileText" title={t("trace.promptAssembly")} defaultOpen={false}>
+        {/* Same order as the assembled user message (reviewer-core assemblePrompt). */}
         <PromptBlock label={t("trace.prompt.system")} text={trace.prompt_assembly.system} color={PROMPT_COLORS.system} />
-        {trace.prompt_assembly.skills != null && (
-          <PromptBlock label={t("trace.prompt.skills")} text={trace.prompt_assembly.skills} color={PROMPT_COLORS.skills} />
+        {trace.prompt_assembly.specs != null && (
+          <PromptBlock label={t("trace.prompt.specs")} text={trace.prompt_assembly.specs} color={PROMPT_COLORS.specs} />
         )}
         {trace.prompt_assembly.intent != null && (
           <PromptBlock label={t("trace.prompt.intent")} text={trace.prompt_assembly.intent} color={PROMPT_COLORS.intent} />
+        )}
+        {trace.prompt_assembly.skills != null && (
+          <PromptBlock label={t("trace.prompt.skills")} text={trace.prompt_assembly.skills} color={PROMPT_COLORS.skills} />
         )}
         {trace.prompt_assembly.memory != null && (
           <PromptBlock label={t("trace.prompt.memory")} text={trace.prompt_assembly.memory} color={PROMPT_COLORS.memory} />
         )}
         {trace.prompt_assembly.repo_map != null && (
           <PromptBlock label={t("trace.prompt.repoMap")} text={trace.prompt_assembly.repo_map} color={PROMPT_COLORS.repoMap} />
-        )}
-        {trace.prompt_assembly.specs != null && (
-          <PromptBlock label={t("trace.prompt.specs")} text={trace.prompt_assembly.specs} color={PROMPT_COLORS.specs} />
         )}
         {trace.prompt_assembly.callers != null && (
           <PromptBlock label={t("trace.prompt.callers")} text={trace.prompt_assembly.callers} color={PROMPT_COLORS.callers} />
