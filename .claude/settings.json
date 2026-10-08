@@ -24,5 +24,29 @@
       "Edit(./server/.env)",
       "Edit(./client/.env)"
     ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/insights-baseline.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/insights-gate.sh",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
   }
 }

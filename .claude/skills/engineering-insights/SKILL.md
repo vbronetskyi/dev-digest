@@ -44,6 +44,12 @@ anything the type checker or linter already enforces produce no entry.
 If nothing qualifies, write nothing — and say that you wrote nothing, so the
 silence is visible rather than ambiguous.
 
+The trigger does not depend on remembering this. A `SessionStart` hook records
+where the session began and reminds you to read the insights; a `Stop` hook
+(`.claude/hooks/insights-gate.sh`) sends the session back once if it changed a
+package's code without touching that package's `INSIGHTS.md`. Answer it with an
+entry, or by saying that nothing qualified — the next stop goes through.
+
 ## Entry format
 
 Append under the matching section:
