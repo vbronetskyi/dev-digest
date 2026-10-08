@@ -7,8 +7,10 @@
 | `/repos/:repoId/pulls` | PR list with status filters, sort and refresh | `usePulls` → `GET /repos/:id/pulls`; index badge → `GET /repos/:id/index-state` |
 | `/repos/:repoId/pulls/:number` | PR detail: Overview · Agent runs · Files changed, plus the trace drawer | see below |
 | `/agents` | Reviewer agents | `GET /agents` |
-| `/agents/:id` | Agent editor: Config · Skills (`?tab=`) | `GET/PUT /agents/:id`; Skills tab → `GET/POST /agents/:id/skills`, `GET /skills` |
+| `/agents/:id` | Agent editor: Config · Skills · Context (`?tab=`) | `GET/PUT /agents/:id`; Skills tab → `GET/POST /agents/:id/skills`, `GET /skills`; Context tab → `GET/PUT /agents/:id/context`, `GET /repos/:activeRepo/context` |
 | `/skills` | Skills Lab: library + editor (`?skill=`, `?tab=`) | `useSkills` → `GET /skills`; editor → `GET/PUT/DELETE /skills/:id`, `/versions`, `/stats`; import → `POST /skills/import[/file]/preview`, `POST /skills/import[/file]` |
+| `/repos/:repoId/context` | Project Context: the repo's specs/docs/insights Markdown, read-only (`?doc=`) | `useContextDocs` → `GET /repos/:id/context`; preview → `GET /repos/:id/context/file?path=` |
+| `/repos/:repoId/onboarding` | Onboarding Tour | `useOnboarding` → `GET /repos/:id/onboarding`; Generate / Regenerate → `POST` (one model call) |
 | `/repos/:repoId/conventions` | Conventions extractor | `useConventions` → `GET /repos/:id/conventions`; scan → `POST /repos/:id/conventions/extract`; `POST /conventions/:id/accept`, `DELETE /conventions/:id` |
 | `/settings/:section` | API keys, models | `GET /settings`, `GET /settings/secrets-status`, `PUT /settings`; model lists → `GET /providers/:id/models` |
 
@@ -57,5 +59,19 @@ note when the PR head moved since.
 **Files changed tab** (`?tab=diff`) — Smart order or Original order, finding
 markers and the split banner (`smart-diff.md`), plus GitHub comments.
 
+## Project Context and Onboarding (L05)
+
+- **Project Context** — documents grouped by folder kind (specs, docs, insights); the
+  selected one shows its path, "used by N agents", token estimate, a GitHub link at the
+  default branch and its content in the kit's `Markdown safe` mode (no raw HTML, http(s)
+  links only, no images).
+- **Agent → Context tab** — the active repo's documents: tick to attach, untick to
+  detach, drag or arrows to reorder, eye to preview; saved at once. Token total with a
+  warning above 4K; an attached path the active repo lacks is marked missing.
+- **Onboarding Tour** — empty state with Generate; then an "on this page" index, five
+  sections (safe Markdown, the architecture diagram via `MermaidDiagram`, files linked
+  on GitHub at the indexed commit, numbered reading path) and a footer naming model,
+  cost and index commit, or the skeleton's reason.
+
 No page triggers an LLM call by being opened. Model calls happen only from
-**Run Review** and the intent card's **Derive**.
+**Run Review**, the intent card's **Derive** and the tour's **Generate / Regenerate**.
