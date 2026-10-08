@@ -28,4 +28,18 @@ fit — they keep the prompt focused; the skeleton writes its own commands from 
 
 ## Pass 2 — at `2a4fa85`
 
-PASS2
+**Verdict: ready.** Every pass-1 item resolved or covered by the revised spec (AC-9 by
+file name, new AC-24). Follow-ups it raised, closed right after in `df030e4`:
+
+| Remaining item | Resolution |
+|---|---|
+| AC-12: an unmatched backtick from the model could leave a bare URL outside a code span, and GFM would link it | the tour renders prose with `Markdown links="none"`: no link survives even if the server misses one; `OnboardingTour.test` "AC-12" |
+| AC-24: the tree and manifests were read at the symbolic `HEAD`, so a resync between the check and the reads could mix commits | both are read at the indexed sha (`listFiles(repo, sha)`, `readCommitted(repo, path, sha)`); `git-list-files.test` "reads … at an explicit commit" |
+| AC-9: the rule also covers singular `style.*`, `constant.*`, `type.*` | named in the spec |
+| AC-9: eight-step cap untested | `onboarding-helpers.test` "AC-9: the reading path stops at eight steps" |
+| plan T6 missing AC-24; `server/specs/onboarding.md` listed only two 409 cases; the AC-16/AC-24 test was titled "AC-13" | updated / renamed |
+
+Accepted as is: the 90 s deadline is proven on `withDeadline` itself (`deadline.test`);
+the service path for it is the same `catch` the schema-failure test drives into a
+skeleton. `maxRetries: 0` is asserted on what the service sends, which both adapters
+honour (`openai.ts`, `openrouter.ts`).
