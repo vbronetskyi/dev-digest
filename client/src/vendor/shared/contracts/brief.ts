@@ -18,6 +18,8 @@ export const ChangedSymbol = z.object({
   name: z.string(),
   file: z.string(),
   kind: z.string(),
+  /** Declaration line in the indexed version, for linking. */
+  line: z.number().int().nullish(),
 });
 export type ChangedSymbol = z.infer<typeof ChangedSymbol>;
 
@@ -40,6 +42,14 @@ export const BlastRadius = z.object({
   changed_symbols: z.array(ChangedSymbol),
   downstream: z.array(DownstreamImpact),
   summary: z.string(),
+  /** Set when there is no full answer: why, and what would fix it. */
+  degraded: z
+    .object({ reason: z.enum(['not_indexed', 'no_files', 'flag_off']), message: z.string() })
+    .nullish(),
+  /** Commit the index describes; callers and lines are as of this sha. */
+  indexed_sha: z.string().nullish(),
+  /** Server time spent — the budget is 200 ms, no model call. */
+  duration_ms: z.number().int().nullish(),
 });
 export type BlastRadius = z.infer<typeof BlastRadius>;
 

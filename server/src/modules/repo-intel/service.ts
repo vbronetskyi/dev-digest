@@ -330,7 +330,7 @@ export class RepoIntelService implements RepoIntel {
       const key = `${s.name}:${s.path}`;
       if (!seenSym.has(key)) {
         seenSym.add(key);
-        changedSymbols.push({ file: s.path, name: s.name, kind: s.kind });
+        changedSymbols.push({ file: s.path, name: s.name, kind: s.kind, line: s.line, endLine: s.endLine });
       }
       nameSet.add(s.name);
     }
@@ -372,8 +372,10 @@ export class RepoIntelService implements RepoIntel {
     callers.sort((a, b) => b.rank - a.rank);
 
     // Precomputed facts per caller file (endpoints + crons), so consumers can
-    // attribute them to the changed symbol whose callers live in that file.
-    const facts = await this.repo.getFileFacts(repoId, callerFiles);
+    // attribute them to the changed symbol whose callers live in that file —
+    // and for the changed files themselves (a changed route handler affects the
+    // routes it declares even with no resolved caller).
+    const facts = await this.repo.getFileFacts(repoId, [...new Set([...callerFiles, ...changedFiles])]);
     const endpoints = new Set<string>();
     const factsByFile: Record<string, { endpoints: string[]; crons: string[] }> = {};
     for (const f of facts) {
@@ -381,9 +383,18 @@ export class RepoIntelService implements RepoIntel {
       for (const e of f.endpoints) endpoints.add(e);
     }
 
+    // Cap per changed symbol (highest rank first), so one popular helper cannot
+    // push every other symbol's callers out of the result.
+    const perSymbol = new Map<string, number>();
+    const capped = callers.filter((c) => {
+      const n = (perSymbol.get(c.viaSymbol) ?? 0) + 1;
+      perSymbol.set(c.viaSymbol, n);
+      return n <= MAX_CALLERS_PER_SYMBOL;
+    });
+
     return {
       changedSymbols,
-      callers: callers.slice(0, MAX_CALLERS_PER_SYMBOL),
+      callers: capped,
       impactedEndpoints: [...endpoints],
       factsByFile,
       degraded: false,

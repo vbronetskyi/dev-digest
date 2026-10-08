@@ -58,6 +58,9 @@ export interface BlastChangedSymbol {
   file: string;
   name: string;
   kind: string;
+  /** Declaration range in the indexed (base) version; null when the indexer has no range. */
+  line?: number | null;
+  endLine?: number | null;
 }
 
 export interface BlastCallerRow {
