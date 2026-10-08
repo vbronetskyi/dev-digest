@@ -45,7 +45,7 @@ export function BlastRadiusCard({ prId, repo, defaultBranch }: { prId: string; r
                       <b className="tnum" style={s.statNum}>
                         {n}
                       </b>
-                      {t(`stat.${k}`)}
+                      {t(`stat.${k}`, { count: n })}
                     </span>
                   );
                 })}

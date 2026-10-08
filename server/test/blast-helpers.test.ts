@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { summarize, touchedBaseLines, touchedSymbols } from '../src/modules/blast/helpers.js';
+import { normalizeEndpoint, summarize, touchedBaseLines, touchedSymbols } from '../src/modules/blast/helpers.js';
 
 describe('touchedBaseLines', () => {
   it('maps removals to their old line and insertions to the line they follow', () => {
@@ -55,5 +55,13 @@ describe('summarize', () => {
       ]),
     ).toBe('2 symbols changed → 1 caller, 2 endpoints, 1 cron');
     expect(summarize(0, [])).toMatch(/No indexed symbol/);
+  });
+});
+
+describe('normalizeEndpoint', () => {
+  it('turns template placeholders into path parameters', () => {
+    expect(normalizeEndpoint('POST /findings/:id/${action}')).toBe('POST /findings/:id/:action');
+    expect(normalizeEndpoint('GET /a/${ id }/b')).toBe('GET /a/:id/b');
+    expect(normalizeEndpoint('GET /plain')).toBe('GET /plain');
   });
 });

@@ -51,6 +51,14 @@ export function touchedSymbols<S extends SymbolInFile>(symbols: S[], touched: Re
   });
 }
 
+/**
+ * Routes the indexer read from template literals keep the placeholder
+ * ("POST /findings/:id/${action}"); show it as the path parameter it is.
+ */
+export function normalizeEndpoint(endpoint: string): string {
+  return endpoint.replace(/\$\{\s*([A-Za-z_$][\w$]*)\s*\}/g, ':$1');
+}
+
 export function summarize(changed: number, downstream: DownstreamImpact[]): string {
   if (changed === 0) return 'No indexed symbol is touched by this PR.';
   const callers = downstream.reduce((n, d) => n + d.callers.length, 0);

@@ -46,9 +46,9 @@ describe("BlastRadiusCard", () => {
   it("shows the counts and where the numbers come from", () => {
     renderCard(BLAST);
     expect(screen.getByText("symbols").parentElement).toHaveTextContent("2symbols");
-    expect(screen.getByText("callers").parentElement).toHaveTextContent("1callers");
+    expect(screen.getByText("caller").parentElement).toHaveTextContent("1caller");
     expect(screen.getByText("endpoints").parentElement).toHaveTextContent("2endpoints");
-    expect(screen.getByText("cron/jobs").parentElement).toHaveTextContent("1cron/jobs");
+    expect(screen.getByText("cron/job").parentElement).toHaveTextContent("1cron/job");
     expect(screen.getByText("From the repo index at abcdef1 · 12 ms · no model call")).toBeInTheDocument();
   });
 
@@ -62,6 +62,8 @@ describe("BlastRadiusCard", () => {
     fireEvent.click(screen.getByRole("button", { name: /bucketKey\(\)/ }));
     expect(screen.getByText("reset-buckets (hourly)")).toBeInTheDocument();
     expect(screen.getByText("No resolved callers")).toBeInTheDocument();
+    expect(screen.getByText("1 caller")).toBeInTheDocument();
+    expect(screen.getByText("0 callers")).toBeInTheDocument();
   });
 
   it("graph: one symbol at a time, switchable", () => {

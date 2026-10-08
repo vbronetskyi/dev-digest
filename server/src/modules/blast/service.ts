@@ -3,7 +3,7 @@ import type { Container } from '../../platform/container.js';
 import { NotFoundError } from '../../platform/errors.js';
 import { BlastRepository } from './repository.js';
 import { DEGRADED_MESSAGES, MAX_CALLERS_SHOWN } from './constants.js';
-import { degradedResult, summarize, touchedBaseLines, touchedSymbols } from './helpers.js';
+import { degradedResult, normalizeEndpoint, summarize, touchedBaseLines, touchedSymbols } from './helpers.js';
 
 /**
  * What a PR can break, read from the repo-intel index: the symbols its hunks
@@ -50,7 +50,7 @@ export class BlastService {
       return {
         symbol: sym.name,
         callers: callers.map((c) => ({ name: c.symbol, file: c.file, line: c.line })),
-        endpoints_affected: [...new Set(files.flatMap((f) => facts[f]?.endpoints ?? []))],
+        endpoints_affected: [...new Set(files.flatMap((f) => (facts[f]?.endpoints ?? []).map(normalizeEndpoint)))],
         crons_affected: [...new Set(files.flatMap((f) => facts[f]?.crons ?? []))],
       };
     });
