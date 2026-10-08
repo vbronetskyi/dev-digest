@@ -43,4 +43,5 @@ pnpm test       # vitest + jsdom, fetch mocked — no API or browser needed
 - Adding a component, hook or deciding Server vs Client → `docs/ui-architecture.md`
 - Changing a route or the data a page loads → `specs/pages.md`
 - Rendering money / run cost → `specs/run-cost-display.md`
+- Severity counts, filters or the PR list findings preview → `specs/findings-by-severity.md`
 - Before any task in this package → `insights/INSIGHTS.md`

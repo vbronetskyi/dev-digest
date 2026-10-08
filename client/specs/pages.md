@@ -12,11 +12,13 @@
 
 ## PR list — `/repos/:repoId/pulls`
 
-Columns: Pull request · Author · Size · Score · Status · Cost · Updated.
+Columns: Pull request · Author · Size · Score · Findings · Status · Cost · Updated.
 
 - **Score** — latest review's score, `—` when never reviewed.
 - **Status** — derived on the server: needs review / reviewed / stale for open
   PRs, GitHub state otherwise.
+- **Findings** — severity icons of the latest review; hover opens a read-only
+  preview of its findings (`findings-by-severity.md`).
 - **Cost** — `PrMeta.cost_usd`, rendered per `run-cost-display.md`.
 - Opening the list syncs PRs from GitHub when a token is set; without one it
   serves what is persisted.
@@ -36,11 +38,12 @@ then:
 **Agent runs tab** (`?tab=findings`) has two sections:
 
 - **Timeline** — runs and commits interleaved, newest first. A run tile shows
-  its outcome badge, score ring, agent and model, run time and cost; clicking the
-  agent jumps to its review run, the file icon opens the trace.
+  its outcome badge, score ring, agent and model, severity icons, run time and
+  cost; clicking the agent jumps to its review run, the file icon opens the trace.
 - **Review runs** — one collapsible card per review run: verdict banner with PR
-  score, then the findings with Accept / Dismiss and a "hide low confidence"
-  toggle. The newest run is expanded by default.
+  score, the severity count row and filter buttons, then the findings with
+  Accept / Dismiss and a "hide low confidence" toggle. The newest run is expanded
+  by default.
 
 No page triggers an LLM call by being opened. Model calls happen only from
 **Run Review**.

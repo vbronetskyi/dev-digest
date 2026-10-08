@@ -43,5 +43,6 @@ pnpm db:migrate && pnpm db:seed                   # not run on boot
 - Adding a module, route or adapter → `docs/architecture.md`
 - Touching review execution, runs, findings or grounding → `specs/review-flow.md`
 - Touching run cost, pricing or the PR list total → `specs/run-cost.md`
+- Changing what `GET /repos/:id/pulls` computes → `specs/pr-list.md`
 - Writing tests → `../TESTING.md` (and the `.it.test.ts` rule)
 - Before any task in this package → `insights/INSIGHTS.md`
