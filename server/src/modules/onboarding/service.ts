@@ -12,6 +12,7 @@ import {
   ONBOARDING_DEADLINE_MS,
   ONBOARDING_OPENROUTER_MODEL,
   ONBOARDING_SCHEMA_NAME,
+  READING_PATH_EXCLUDE,
   READING_PATH_LEN,
 } from './constants.js';
 import {
@@ -111,7 +112,7 @@ export class OnboardingService {
     const intel = this.container.repoIntel;
     const [fileFacts, topFiles, chains] = await Promise.all([
       intel.getRepoFileFacts(repoId),
-      intel.getTopFilesByRank(repoId, READING_PATH_LEN),
+      intel.getTopFilesByRank(repoId, READING_PATH_LEN, { exclude: READING_PATH_EXCLUDE }),
       intel.getCriticalPaths(repoId),
     ]);
     const endpoints = fileFacts.filter((f) => f.endpoints.length > 0).map((f) => ({ file: f.path, endpoints: f.endpoints }));

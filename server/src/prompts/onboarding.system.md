@@ -11,6 +11,9 @@ Return exactly these fields:
   change there ripples.
 - `how_to_run` — `body`: how to install, configure and start it, using only the package
   manager, scripts and infra files in FACTS; say plainly when something is missing.
+  Each manifest has its own `manager` — use it for that package's commands. Do not
+  assume workspaces, monorepo tools or a root install unless a root `package.json` in
+  FACTS says so.
 - `reading_path` — `body`: one sentence. `notes`: one line per file in FACTS.top_files,
   keyed by its `path`, saying what to look for there. Do not add other files.
 - `first_tasks` — `body`: two or three small, safe first contributions as a list.

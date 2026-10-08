@@ -12,6 +12,12 @@ export const MAX_MANIFESTS = 10;
 export const MANIFEST_MAX_BYTES = 64 * 1024;
 /** AC-9: steps in the reading path. */
 export const READING_PATH_LEN = 8;
+/**
+ * AC-9: left out of the reading path. PageRank pools rank in files that import
+ * nothing, so styles, constants and type-only modules rank high without being
+ * where a newcomer should start.
+ */
+export const READING_PATH_EXCLUDE = ['/styles.', 'constants.', '/types.', '.d.ts'];
 
 export const MAX_LANGUAGES = 8;
 export const MAX_DIRS = 12;

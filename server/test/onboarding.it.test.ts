@@ -20,6 +20,7 @@ const FILES = {
   'server/src/app.ts': 'export const app = 1;',
   'server/src/db.ts': 'export const db = 1;',
   'server/src/routes.ts': 'export const routes = 1;',
+  'client/app/_components/Card/styles.ts': 'export const s = {};',
   'server/specs/api.md': '# API',
   'docker-compose.yml': 'services: {}',
 };
@@ -77,6 +78,8 @@ d('L05 onboarding generator — SPEC-02 (Testcontainers pg)', () => {
         { repoId, filePath: 'server/src/routes.ts', pagerank: 0.2, hotness: 0, rank: 0.2, percentile: 50 },
         { repoId, filePath: 'server/src/db.ts', pagerank: 0.5, hotness: 0, rank: 0.5, percentile: 99 },
         { repoId, filePath: 'server/src/app.ts', pagerank: 0.2, hotness: 0, rank: 0.2, percentile: 50 },
+        // A leaf every component imports: top-ranked, but not where to start reading.
+        { repoId, filePath: 'client/app/_components/Card/styles.ts', pagerank: 0.9, hotness: 0, rank: 0.9, percentile: 100 },
       ]);
       await db.insert(t.fileEdges).values([{ repoId, fromFile: 'server/src/db.ts', toFile: 'server/src/app.ts' }]);
       await db.insert(t.fileFacts).values([{ repoId, filePath: 'server/src/routes.ts', endpoints: ['GET /items'], crons: [] }]);
@@ -107,14 +110,15 @@ d('L05 onboarding generator — SPEC-02 (Testcontainers pg)', () => {
     expect(res.statusCode).toBe(200);
     const tour = res.json().onboarding;
     expect(tourCalls(llm)).toHaveLength(1);
-    expect(tour.meta).toMatchObject({ source: 'model', model: 'deepseek/deepseek-v4-flash', cost_usd: 0.001, indexed_sha: 'base123', files_total: 8 });
+    expect(tour.meta).toMatchObject({ source: 'model', model: 'deepseek/deepseek-v4-flash', cost_usd: 0.001, indexed_sha: 'base123', files_total: 9 });
     expect(git.reads.sort()).toEqual(['package.json', 'server/package.json']);
 
     const user = (tourCalls(llm)[0]!.req as { messages: { content: string }[] }).messages[1]!.content;
     expect(user).toContain('<untrusted source="facts">');
     for (const fact of ['"GET /items"', '"fastify"', '"pnpm"', '"docker-compose.yml"', '"server/specs/api.md"']) expect(user).toContain(fact);
 
-    // Rank 0.5 first, then the two 0.2 files by path — never alphabetical overall.
+    // Rank 0.5 first, then the two 0.2 files by path — never alphabetical overall,
+    // and the higher-ranked styles module is left out (AC-9).
     const reading = tour.sections.find((s: { kind: string }) => s.kind === 'reading_path');
     expect(reading.links.map((l: { path: string }) => l.path)).toEqual(['server/src/db.ts', 'server/src/app.ts', 'server/src/routes.ts']);
     expect(reading.links[0].label).toBe('DB client.');

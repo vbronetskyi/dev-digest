@@ -58,8 +58,9 @@ Narrative (one model call)
   `critical_paths`, `how_to_run`, `reading_path`, `first_tasks`; only `architecture`
   may carry a diagram.
 - **AC-9** The reading path shall be the top-ranked files of the index (at most eight,
-  rank descending, ties by path), in that order; the model's notes are attached to those
-  steps, and a step or path the model adds is ignored.
+  rank descending, ties by path), leaving out style, constant and type-only modules, in
+  that order; the model's notes are attached to those steps, and a step or path the
+  model adds is ignored.
 - **AC-10** The critical paths shall be the import chains from the index; the model's
   notes are attached to them, and a path the model adds is ignored.
 - **AC-11** IF the model output links a path that is not a committed file, THEN the
@@ -145,3 +146,6 @@ excerpts) is rewritten to match AC-7–AC-10.
   schema failures count as model failures, a failed regenerate keeps the good tour,
   concurrent runs refused, "indexed" defined, the prompt-template conflict resolved.
   Criteria 11 → 23.
+- 2026-10-08 — AC-9 narrowed after a live run on this repo: PageRank pools rank in files
+  that import nothing, so `styles.ts` and `constants.ts` filled the reading path. They
+  are left out; the order stays rank order.
