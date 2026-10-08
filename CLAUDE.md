@@ -10,5 +10,9 @@ Everything above is shared with other agents. These lines are Claude-specific.
 - At the start of a task read the touched packages' insights; at the end run the
   `engineering-insights` skill. A Stop hook (`.claude/hooks/insights-gate.sh`) sends
   the session back once if a package's code changed without its `INSIGHTS.md`.
+- Subagents live in `.claude/agents/`. For a non-trivial feature: `planner` →
+  `implementer` → `architecture-reviewer` and `test-writer` in parallel → `plan-verifier`;
+  `researcher` before planning, `doc-writer` after. Planner, reviewer and verifier are
+  read-only by their tool lists.
 - `.claude/settings.json` denies edits to migrations, lockfiles and `.env` files — if a
   task seems to need one of those, stop and ask instead of working around it.
