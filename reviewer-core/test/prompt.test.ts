@@ -147,6 +147,23 @@ describe('assemblePrompt: project context (SPEC-01)', () => {
     expect(assembly.specs).toContain('Source: specs/public-api.md');
   });
 
+  it('puts the documents first and the change last: before the PR description, intent and diff', () => {
+    const user = userOf({
+      system: 'S',
+      diff: 'd',
+      task: 'Review PR #3',
+      prDescription: 'desc',
+      intent: { intent: 'i', in_scope: [], out_of_scope: [] },
+      repoMap: 'map',
+      specs: [doc],
+    });
+    const at = (h: string) => user.indexOf(h);
+    expect(at('Review PR #3')).toBeLessThan(at('## Project context'));
+    expect(at('## Project context')).toBeLessThan(at('## PR description'));
+    expect(at('## PR description')).toBeLessThan(at('## PR intent'));
+    expect(at('## Repo skeleton')).toBeLessThan(at('## Diff to review'));
+  });
+
   it('AC-17: without documents the prompt has no Project context section and no rule', () => {
     const { messages, assembly } = assemblePrompt({ system: 'S', diff: 'd' });
     expect(messages[1]!.content).not.toContain('## Project context');

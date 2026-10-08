@@ -5,6 +5,15 @@ never rewrite old ones — supersede them with a new entry instead.
 
 ## What Works
 
+### 2026-10-08 — Long reference text goes first, the diff last
+With the project-context documents placed right before `## Diff to review`, the
+General Reviewer on deepseek-v4-flash answered "no diff was provided" and
+approved demo PR #3 in 2 of 2 runs (47–234 s). The same agent without documents
+found the SSRF in 2 of 2 (16–20 s); with the documents moved to the top of the
+user message it found it in 2 of 2 again (24–27 s). Small sample, clear direction:
+new long sections belong before the PR material, never between it and the diff.
+Evidence: `src/prompt.ts:163`, `test/prompt.test.ts:150`
+
 ## What Doesn't Work
 
 ### 2026-10-08 — `timeoutMs` does not bound a model call

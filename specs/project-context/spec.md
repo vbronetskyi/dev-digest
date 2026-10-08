@@ -55,8 +55,9 @@ Attaching
 
 Reviewing
 - **AC-8** WHEN a review runs with an agent that has context paths, the system shall put
-  each attached path that is in the AC-1 list of that repository into the prompt, in the
-  saved order, as its own untrusted block whose first line names the path, with the
+  each attached path that is in the AC-1 list of that repository into the prompt, ahead
+  of the PR material (description, intent, diff), in the saved order, as its own
+  untrusted block whose first line names the path, with the
   document's Markdown headings moved two levels down so none sits at the prompt's own
   section level; the path is never placed in a block attribute.
 - **AC-9** IF an attached path is not in the AC-1 list of the reviewed repository, THEN
@@ -144,3 +145,7 @@ tab shows the active repository (the one in the repo switcher).
 - 2026-10-08 — AC-8 extended during implementation: a live run's trace showed a document's
   `## Modules`, `## Data` headings at the same level as the prompt's `## Diff to review`,
   so document headings are now demoted. The behaviour changed, so the spec changed first.
+- 2026-10-08 — AC-8: documents now come before the PR material. With them right before the
+  diff, the General Reviewer (deepseek-v4-flash) twice answered "no diff was provided" and
+  approved PR #3; the same agent without documents found the SSRF twice; with the
+  documents first it found it twice again.
