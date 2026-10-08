@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm typecheck)",
+      "Bash(pnpm test)",
+      "Bash(pnpm exec vitest run *)",
+      "Bash(pnpm depcruise)",
+      "Bash(pnpm depcruise:all)",
+      "Bash(npm test)",
+      "Bash(npm run typecheck)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)"
+    ],
+    "deny": [
+      "Edit(./server/src/db/migrations/**)",
+      "Edit(./server/pnpm-lock.yaml)",
+      "Edit(./client/pnpm-lock.yaml)",
+      "Edit(./reviewer-core/package-lock.json)",
+      "Edit(./e2e/package-lock.json)",
+      "Edit(./skills-lock.json)",
+      "Read(./server/.env)",
+      "Read(./client/.env)",
+      "Edit(./server/.env)",
+      "Edit(./client/.env)"
+    ]
+  }
+}
