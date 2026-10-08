@@ -15,9 +15,11 @@ every enabled agent.
 
 ## Execution (`ReviewRunExecutor`)
 
-1. The PR diff is loaded once for all agents: `git diff base...head` on the local
-   clone, falling back to a diff rebuilt from persisted `pr_files` patches.
-   If loading fails, **every** queued run is marked `failed` with the error.
+1. The PR diff is loaded once for all agents, from the first source that has a
+   patch: `git diff base...head` on the local clone → persisted `pr_files` →
+   the PR files from GitHub (then persisted). No source → `EmptyDiffError`.
+   If loading fails, **every** queued run is marked `failed` with the error —
+   an empty diff is never sent to the model.
 2. Per agent, sequentially:
    - resolve the agent's LLM provider (a missing key fails that run only);
    - gather repo context unless the agent opted out of repo-intel: callers of
@@ -53,9 +55,15 @@ the log of what happened, including why a run failed.
 - Cancelling sets a flag on the `RunBus`; the engine checks it before each LLM
   call, so a cancel takes effect at the next chunk boundary.
 
-## Known gap
+## Reading a run
 
-If the clone lacks the PR head commit **and** `pr_files` were never loaded (the
-PR page was not opened), step 1 produces an empty diff. The run still calls the
-model and completes as `approve` with score 100 — see
-`insights/INSIGHTS.md` (Open Questions).
+`GET /runs/:id/review` (workspace-scoped) returns the run row, the PR id and
+number, the repo's full name and the run's review with findings — `review` is
+`null` while the run is `running` or after it failed. The MCP server's
+`get_findings` and `run_agent_on_pr` read runs through it.
+
+## Resolved gap
+
+Until L04 an empty diff (no PR head in the clone, PR page never opened) still
+reached the model and came back as `approve` with score 100. Step 1's GitHub
+fallback and `EmptyDiffError` close it; `test/run-result.it.test.ts` covers both.
