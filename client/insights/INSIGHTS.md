@@ -61,11 +61,13 @@ Evidence: `src/app/repos/[repoId]/pulls/[number]/_components/FindingsPanel/Findi
 Added `formatCost` + `CostBadge`; cost now shows in the PR list Cost column,
 on each timeline run tile and as a COST block in the trace drawer. Checked on
 a live run via screenshots of all three places.
+Evidence: `src/lib/format-cost.ts:21`, `src/components/cost-badge/CostBadge.tsx:7`
 
 ### 2026-10-08 — Homework 1: findings by severity
 Severity pills + filter in review run cards, severity icons on timeline tiles,
 FINDINGS column with a read-only hover preview in the PR list. Verified with a
 scripted browser on live reviews of demo PR #3: pills 1/1/2, Critical filter
 leaves the single SSRF card, preview shows 4 findings and no buttons.
+Evidence: `src/lib/findings.ts:13`, `src/app/repos/[repoId]/pulls/_components/FindingsCell/FindingsCell.tsx:17`
 
 ## Open Questions

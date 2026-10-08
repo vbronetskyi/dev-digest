@@ -35,4 +35,5 @@ One-time: `npm i -g agent-browser && agent-browser install`.
 
 - Writing or debugging a flow, or changing the runner → `docs/runner.md`
 - Changing a flow's scope or adding one → `specs/flows.md`
-- Before any task in this package → `insights/INSIGHTS.md`
+- Before any task in this package → its insights file; the engineering-insights skill
+  creates it with the first entry worth keeping (none so far).

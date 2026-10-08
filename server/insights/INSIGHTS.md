@@ -88,6 +88,7 @@ Restored `agent_runs.cost_usd` (migration 0010), threaded the engine's
 Verified on a live OpenRouter run: DB, API, trace and OpenRouter billing all
 show the same number. Integration test covers success, failed-run exclusion
 and the no-runs `null` case.
+Evidence: `src/db/migrations/0010_tense_nighthawk.sql:1`, `src/modules/reviews/run-executor.ts:214`, `test/reviews.it.test.ts:215`
 
 ### 2026-10-08 — Homework 1: findings by severity
 `GET /repos/:id/pulls` now returns `findings_by_severity` of the latest review,
@@ -95,6 +96,7 @@ counted in Postgres; new `SeverityCounts` contract in both vendor copies.
 Reviewed the three demo PRs with all agents: SSRF (#3) found by all three; N+1
 (#2) found by General and Security but missed by Performance; clean PR #1 got a
 false CRITICAL from General. Integration test covers null → counts → latest-only.
+Evidence: `src/modules/pulls/routes.ts:134`, `test/reviews.it.test.ts:273`
 
 ## Open Questions
 
