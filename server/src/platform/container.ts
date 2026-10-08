@@ -6,6 +6,7 @@ import type {
   CodeIndex,
   Embedder,
   LLMProvider,
+  RemoteDocumentFetcher,
 } from '@devdigest/shared';
 import type { AppConfig } from './config.js';
 import type { Db } from '../db/client.js';
@@ -16,6 +17,7 @@ import { LocalNoAuthProvider } from '../adapters/auth/local.js';
 import { OctokitGitHubClient } from '../adapters/github/octokit.js';
 import { SimpleGitClient } from '../adapters/git/simple-git.js';
 import { RipgrepCodeIndex } from '../adapters/codeindex/ripgrep.js';
+import { SafeHttpsFetcher } from '../adapters/fetch/safe-https.js';
 import { OpenAIProvider } from '../adapters/llm/openai.js';
 import { AnthropicProvider } from '../adapters/llm/anthropic.js';
 import { OpenAIEmbedder } from '../adapters/embedder/openai.js';
@@ -51,6 +53,8 @@ export interface ContainerOverrides {
   /** repo-intel T3 adapters — only the indexer pipeline reads these. */
   depgraph?: DepGraph;
   tokenizer?: Tokenizer;
+  /** Remote document fetcher (skill import) — tests inject a fixture map. */
+  remoteDocuments?: RemoteDocumentFetcher;
 }
 
 export class Container {
@@ -65,6 +69,7 @@ export class Container {
   private _github?: GitHubClient;
   private _codeIndex?: CodeIndex;
   private _embedder?: Embedder;
+  private _remoteDocuments?: RemoteDocumentFetcher;
   private llmCache = new Map<string, LLMProvider>();
 
   // Shared repositories for cross-cutting entities (agents, reviews/pulls,
@@ -115,6 +120,13 @@ export class Container {
     if (this.overrides.repoIntel) return this.overrides.repoIntel;
     this._repoIntel ??= new RepoIntelService(this);
     return this._repoIntel;
+  }
+
+  /** SSRF-safe fetcher for user-supplied URLs (skill import). */
+  get remoteDocuments(): RemoteDocumentFetcher {
+    if (this.overrides.remoteDocuments) return this.overrides.remoteDocuments;
+    this._remoteDocuments ??= new SafeHttpsFetcher();
+    return this._remoteDocuments;
   }
 
   /** Import-graph builder (dependency-cruiser). T3 indexer pipeline only. */

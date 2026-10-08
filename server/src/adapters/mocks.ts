@@ -1,5 +1,7 @@
 import type { z } from 'zod';
 import type {
+  RemoteDocument,
+  RemoteDocumentFetcher,
   LLMProvider,
   ModelInfo,
   CompletionRequest,
@@ -326,5 +328,17 @@ export class MockSecretsProvider implements SecretsProvider {
   constructor(private secrets: Partial<Record<string, string>> = {}) {}
   async get(key: SecretKey): Promise<string | undefined> {
     return this.secrets[key as string];
+  }
+}
+
+// ---------- Mock remote documents (skill import) ----------
+export class MockRemoteDocumentFetcher implements RemoteDocumentFetcher {
+  public calls: string[] = [];
+  constructor(private docs: Record<string, string> = {}) {}
+  async fetchText(url: string): Promise<RemoteDocument> {
+    this.calls.push(url);
+    const text = this.docs[url];
+    if (text === undefined) throw new Error('the server answered HTTP 404');
+    return { url, text };
   }
 }
