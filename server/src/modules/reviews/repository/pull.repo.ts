@@ -33,6 +33,21 @@ export async function getPrFiles(
   return db.select().from(t.prFiles).where(eq(t.prFiles.prId, prId));
 }
 
+/** Replace a PR's persisted files (what the PR page does on open). */
+export async function replacePrFiles(
+  db: Db,
+  prId: string,
+  files: { path: string; additions: number; deletions: number; patch?: string | null }[],
+): Promise<void> {
+  await db.transaction(async (tx) => {
+    await tx.delete(t.prFiles).where(eq(t.prFiles.prId, prId));
+    if (files.length === 0) return;
+    await tx.insert(t.prFiles).values(
+      files.map((f) => ({ prId, path: f.path, additions: f.additions, deletions: f.deletions, patch: f.patch ?? null })),
+    );
+  });
+}
+
 /**
  * Record the commit a review just ran against, so the PR list can derive
  * `reviewed` vs `needs_review` (head moved since the last review) vs `stale`.
