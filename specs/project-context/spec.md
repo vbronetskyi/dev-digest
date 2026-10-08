@@ -34,22 +34,24 @@ Non-goals
 ## Acceptance criteria (EARS)
 
 Discovery and reading
-- **AC-1** The system shall list as context documents the `.md` files committed at the
-  head of the repository's default-branch clone that have a `specs`, `docs` or `insights`
-  directory on their path, each with its folder kind — the deepest such directory wins
+- **AC-1** The system shall list as context documents the `.md` files (extension in any
+  case) committed at the head of the repository's default-branch clone that have a
+  `specs`, `docs` or `insights` directory on their path and no `node_modules` directory,
+  each with its folder kind — the deepest such directory wins
   (`docs/specs/x.md` is `specs`) — size in bytes and an estimate of tokens (bytes / 4).
 - **AC-2** The system shall not list or read symbolic links.
 - **AC-3** WHEN the repository has no local clone, the system shall return an empty list
   with the reason `no_clone` instead of an error.
 - **AC-4** WHEN a document is requested by path, the system shall return its committed
   content only if the path is in the AC-1 list; otherwise it shall answer 404.
-- **AC-5** IF a requested document is larger than 256 KB, THEN the system shall return
-  the first 256 KB followed by a cut marker.
+- **AC-5** IF a requested document is larger than 256 KB of UTF-8, THEN the system shall
+  return its first 256 KB, never ending inside a character, followed by a cut marker.
 
 Attaching
 - **AC-6** WHEN an agent's context is saved, the system shall store the paths in the given
   order with duplicates removed.
-- **AC-7** IF a path is not relative, contains `..` or does not end in `.md`, or more than
+- **AC-7** IF a path is not relative, contains `..` or a backslash, is longer than 300
+  characters or does not end in `.md` (any case), or more than
   20 paths remain after removing duplicates, THEN the system shall reject the request
   with 422 and store nothing.
 
@@ -92,7 +94,8 @@ UI
 - **AC-21** The Context tab shall show the token total of the attached documents and a
   warning above 4,000 tokens.
 - **AC-22** IF an attached path is not in the active repository, THEN the Context tab
-  shall show it as missing there, still removable.
+  shall show it as missing there, still removable; WHILE the repository's documents
+  cannot be listed (no clone), it shall mark nothing as missing and say why.
 
 ## Edge cases
 
@@ -149,3 +152,7 @@ tab shows the active repository (the one in the repo switcher).
   diff, the General Reviewer (deepseek-v4-flash) twice answered "no diff was provided" and
   approved PR #3; the same agent without documents found the SSRF twice; with the
   documents first it found it twice again.
+- 2026-10-08 — wording aligned after the plan-verifier pass (no behaviour change): `.md` in
+  any case and never under `node_modules` (AC-1), the full attach rules (AC-7), the no-clone
+  state of the Context tab (AC-22). AC-5 now counts bytes, as written — the code counted
+  characters and was fixed.

@@ -52,16 +52,17 @@ sharing, scheduled regeneration.
 | AC-11 | T4 | onboarding-helpers "unknown links" | d660aad |
 | AC-12 | T4 | onboarding-helpers "no links in prose" | d660aad |
 | AC-13 | T6 | onboarding.it meta | 7b14b2b |
-| AC-14 | T5, T6 | onboarding-helpers "skeleton", onboarding.it "model fails" | d660aad, 7b14b2b |
+| AC-14 | T5, T6 | onboarding-helpers "skeleton", onboarding.it "model fails", "no provider key"; deadline.test | d660aad, 7b14b2b |
 | AC-15 | T6 | onboarding.it "keeps good tour" | 7b14b2b |
 | AC-16 | T6 | onboarding.it "409 not indexed" | 7b14b2b |
 | AC-17 | T6 | onboarding.it "409 busy" | 7b14b2b |
+| AC-24 | T6 | onboarding.it "AC-13: refuses … different commits" | VERIFY_COMMIT |
 | AC-18 | T6 | onboarding.it "GET no call" | 7b14b2b |
 | AC-19 | T6 | onboarding.it "replace" | 7b14b2b |
 | AC-20 | T7 | OnboardingTour.test "empty" | 3c8c9f5 |
 | AC-21 | T7 | OnboardingTour.test "sections, links" | 3c8c9f5 |
 | AC-22 | T7 | OnboardingTour.test "footer" | 3c8c9f5 |
-| AC-23 | T7 | OnboardingTour.test "no raw HTML"; MermaidDiagram parse gate | 3c8c9f5, 3bf3677 |
+| AC-23 | T7 | OnboardingTour.test "AC-23", MermaidDiagram.test "AC-23" | 3c8c9f5, 3bf3677 |
 
 ## Risks
 

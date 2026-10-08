@@ -12,12 +12,14 @@ import {
   ONBOARDING_DEADLINE_MS,
   ONBOARDING_OPENROUTER_MODEL,
   ONBOARDING_SCHEMA_NAME,
-  READING_PATH_EXCLUDE,
+  READING_PATH_FETCH,
   READING_PATH_LEN,
 } from './constants.js';
 import {
   capFacts,
+  indexNoteFor,
   infraFrom,
+  isReadingPathCandidate,
   languagesFrom,
   managerFor,
   manifestPaths,
@@ -30,7 +32,6 @@ import {
 import { buildOnboardingMessages, groundTour, OnboardingOutput, skeletonTour } from './helpers.js';
 
 const INDEXED = new Set(['full', 'partial']);
-const NO_GRAPH_NOTE = 'The index has no import graph or endpoints for this repository (it parses JS/TS only).';
 
 /**
  * SPEC-02 — the onboarding tour: facts collected by code ($0), one model call
@@ -54,7 +55,9 @@ export class OnboardingService {
 
   async generate(workspaceId: string, repoId: string): Promise<Onboarding> {
     const ref = await this.refOrThrow(workspaceId, repoId);
-    if (!this.container.config.repoIntelEnabled) throw new ConflictError('Repo intel is off, so there is no index to build a tour from.');
+    if (!this.container.config.repoIntelEnabled) {
+      throw new ConflictError('Repo intel is off, so there is no index to build a tour from. Turn it on and index the repository first.');
+    }
     const state = await this.container.repoIntel.getIndexState(repoId);
     if (!INDEXED.has(state.status) || !state.lastIndexedSha) {
       throw new ConflictError('This repository has no completed index yet. Index it first, then generate the tour.');
@@ -62,7 +65,13 @@ export class OnboardingService {
     if (this.running.has(repoId)) throw new ConflictError('A tour for this repository is already being generated.');
     this.running.add(repoId);
     try {
-      const tree = (await this.container.git.listFiles(ref)) ?? [];
+      const tree = await this.container.git.listFiles(ref);
+      if (!tree) throw new ConflictError('This repository has no local clone yet. Index it first, then generate the tour.');
+      // AC-13: the tree, the manifests and the index must describe one commit.
+      const head = await this.container.git.currentHead(ref);
+      if (head !== state.lastIndexedSha) {
+        throw new ConflictError(`The clone is at ${head.slice(0, 7)} but the index is at ${state.lastIndexedSha.slice(0, 7)}. Resync the repository, then generate the tour.`);
+      }
       const facts = await this.collectFacts(ref, repoId, state.lastIndexedSha, tree);
       const tracked = new Set(tree.map((f) => f.path));
       const base = { generated_at: new Date().toISOString(), indexed_sha: facts.indexed_sha, files_total: facts.files_total };
@@ -77,6 +86,8 @@ export class OnboardingService {
             schema: OnboardingOutput,
             schemaName: ONBOARDING_SCHEMA_NAME,
             messages: buildOnboardingMessages(system, facts),
+            // AC-7: one model call — an answer off the schema falls back to the skeleton, no re-prompt.
+            maxRetries: 0,
             sessionId: `repo:${repoId}:onboarding`,
           }),
           ONBOARDING_DEADLINE_MS,
@@ -110,11 +121,12 @@ export class OnboardingService {
       if (parsed) manifests.push({ ...parsed, manager: managerFor(path, tree) });
     }
     const intel = this.container.repoIntel;
-    const [fileFacts, topFiles, chains] = await Promise.all([
+    const [fileFacts, ranked, chains] = await Promise.all([
       intel.getRepoFileFacts(repoId),
-      intel.getTopFilesByRank(repoId, READING_PATH_LEN, { exclude: READING_PATH_EXCLUDE }),
+      intel.getTopFilesByRank(repoId, READING_PATH_FETCH),
       intel.getCriticalPaths(repoId),
     ]);
+    const topFiles = ranked.filter(isReadingPathCandidate).slice(0, READING_PATH_LEN);
     const endpoints = fileFacts.filter((f) => f.endpoints.length > 0).map((f) => ({ file: f.path, endpoints: f.endpoints }));
     const crons = fileFacts.filter((f) => f.crons.length > 0).map((f) => ({ file: f.path, crons: f.crons }));
     return capFacts({
@@ -131,7 +143,7 @@ export class OnboardingService {
       top_files: topFiles,
       chains,
       context_docs: contextDocsFrom(tree).map((d) => d.path),
-      index_note: topFiles.length === 0 && endpoints.length === 0 ? NO_GRAPH_NOTE : null,
+      index_note: indexNoteFor({ endpoints: endpoints.length, crons: crons.length, topFiles: topFiles.length, chains: chains.length }),
     });
   }
 

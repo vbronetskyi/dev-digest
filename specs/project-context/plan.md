@@ -36,7 +36,7 @@ skill-level context, reading from the PR head.
   there are documents → AC-15, AC-17 → `reviewer-core/test/prompt.test.ts`
 - [x] T7 Client hooks + Project Context page `/repos/:repoId/context` + nav item; safe
   Markdown; `activeKeyFor` fixed so `/onboarding` (add repo) is not the tour → AC-18,
-  AC-19 → `ContextPage.test.tsx`, `app-shell/helpers.test.ts`
+  AC-19 → `DocList.test.tsx`, `DocPanel.test.tsx`, `ContextDocView.test.tsx`, `app-shell/helpers.test.ts`
 - [x] T8 Agent editor Context tab → AC-20, AC-21, AC-22 → `ContextTab.test.tsx`
 - [x] T9 Docs: `server/specs/context.md`, `client/specs/pages.md`, `AGENTS.md` read-when,
   insights (plumbing, no AC)
@@ -62,8 +62,8 @@ skill-level context, reading from the PR head.
 | AC-15 | T6 | prompt.test | ba6d561 |
 | AC-16 | T1, T5 | git-list-files "commit, not worktree", context.it | 21b3f33, 6919473 |
 | AC-17 | T5, T6 | prompt.test, context.it "no context" | ba6d561, 6919473 |
-| AC-18 | T7 | ContextPage.test | c868a6d |
-| AC-19 | T7 | ContextPage.test "safe markdown, used by" | c868a6d, 3bf3677 |
+| AC-18 | T7 | DocList.test "AC-18" | c868a6d |
+| AC-19 | T7 | ContextDocView.test "AC-19", DocPanel.test "AC-19" | c868a6d, 3bf3677 |
 | AC-20 | T8 | ContextTab.test | 1d20a06, 781903c |
 | AC-21 | T8 | ContextTab.test "soft cap" | 1d20a06 |
 | AC-22 | T8 | ContextTab.test "missing" | 1d20a06 |

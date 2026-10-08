@@ -17,6 +17,8 @@ const REVIEW: Review = { verdict: 'approve', summary: 'ok', score: 100, findings
 const SPEC = '# Public API\n\nCallback URLs from a request MUST be allow-listed.';
 const FILES = {
   'specs/public-api.md': SPEC,
+  // 2 bytes per character in UTF-8: 150K characters are 300 KB.
+  'docs/ukrainian.md': 'ї'.repeat(150_000),
   'docs/architecture.md': '# Architecture\n\nModules never import each other.',
   'server/insights/INSIGHTS.md': '# Insights',
   'specs/huge.md': 'x'.repeat(300_000),
@@ -76,6 +78,8 @@ d('L05 project context folder — SPEC-01 (Testcontainers pg)', () => {
     for (const bad of [['../secret.md'], ['/etc/x.md'], ['specs/notes.txt'], Array.from({ length: 21 }, (_, i) => `specs/${i}.md`)]) {
       expect((await attach(a.id, bad)).statusCode).toBe(422);
     }
+    // A rejected request stores nothing: the earlier save is still there.
+    expect((await app.inject({ method: 'GET', url: `/agents/${a.id}/context` })).json()).toEqual({ paths: ['docs/architecture.md', 'specs/public-api.md'] });
     // 21 entries with one duplicate leave 20: accepted.
     const twenty = Array.from({ length: 20 }, (_, i) => `specs/${i}.md`);
     expect((await attach(a.id, [...twenty, 'specs/0.md'])).json().paths).toHaveLength(20);
@@ -93,6 +97,7 @@ d('L05 project context folder — SPEC-01 (Testcontainers pg)', () => {
       'specs:specs/huge.md',
       'specs:specs/public-api.md',
       'docs:docs/architecture.md',
+      'docs:docs/ukrainian.md',
       'insights:server/insights/INSIGHTS.md',
     ]);
     const api = list.docs.find((x: { path: string }) => x.path === 'specs/public-api.md');
@@ -119,6 +124,11 @@ d('L05 project context folder — SPEC-01 (Testcontainers pg)', () => {
     const huge = (await file('specs/huge.md')).json().body as string;
     expect(huge.length).toBeLessThan(300_000);
     expect(huge.endsWith('[… document cut at 256 KB]')).toBe(true);
+    // Counted in bytes: 300 KB of two-byte characters is cut too, without splitting one.
+    const ukr = (await file('docs/ukrainian.md')).json().body as string;
+    const kept = ukr.slice(0, ukr.indexOf('\n\n[…'));
+    expect(Buffer.byteLength(kept)).toBe(256 * 1024);
+    expect(kept).toMatch(/^ї+$/);
     expect(readFile).not.toHaveBeenCalled();
     await app.close();
   });
@@ -144,6 +154,7 @@ d('L05 project context folder — SPEC-01 (Testcontainers pg)', () => {
     // AC-16: read through the commit, and only the listed paths.
     expect(git.reads).toEqual(expect.arrayContaining(['docs/architecture.md', 'specs/public-api.md']));
     expect(git.reads).not.toContain('specs/gone.md');
+    expect(git.worktreeReads).toEqual([]);
   });
 
   it('AC-11: a document over the budget is cut and the next one left out, both logged', async () => {

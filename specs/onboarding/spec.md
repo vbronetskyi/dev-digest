@@ -51,15 +51,16 @@ Facts (no model)
   trimmed to their top entries to fit.
 
 Narrative (one model call)
-- **AC-7** The system shall make at most one model call per generation, with the facts as
-  its only repository input, inside one untrusted block, under fixed instructions that
-  say the block is data.
+- **AC-7** The system shall make at most one model call per generation — an answer that
+  does not match the schema is not re-prompted (a transport retry of a request that got
+  no answer is not a second call) — with the facts as its only repository input, inside
+  one untrusted block, under fixed instructions that say the block is data.
 - **AC-8** The tour shall have exactly five sections in this order: `architecture`,
   `critical_paths`, `how_to_run`, `reading_path`, `first_tasks`; only `architecture`
   may carry a diagram.
 - **AC-9** The reading path shall be the top-ranked files of the index (at most eight,
-  rank descending, ties by path), leaving out style, constant and type-only modules, in
-  that order; the model's notes are attached to those steps, and a step or path the
+  rank descending, ties by path), leaving out style, constant and type modules by file
+  name (`styles.*`, `constants.*`, `types.*`, `*.d.ts`), in that order; the model's notes are attached to those steps, and a step or path the
   model adds is ignored.
 - **AC-10** The critical paths shall be the import chains from the index; the model's
   notes are attached to them, and a path the model adds is ignored.
@@ -77,11 +78,14 @@ Fallback, state, errors
   cost.
 - **AC-15** IF a model-written tour is stored and regeneration falls back to a skeleton,
   THEN the system shall keep the stored tour and report that regeneration failed.
-- **AC-16** IF repo-intel is off or the repository has no completed index (status
-  `full` or `partial` with an indexed commit), THEN the system shall refuse to generate
-  with 409 and say to index it first.
+- **AC-16** IF repo-intel is off, the repository has no local clone, or it has no
+  completed index (status `full` or `partial` with an indexed commit), THEN the system
+  shall refuse to generate with 409 and say to index it first.
 - **AC-17** IF a generation for the repository is already running, THEN the system
   shall refuse a second one with 409.
+- **AC-24** IF the clone's head and the indexed commit differ, THEN the system shall
+  refuse to generate with 409 and say to resync, so the tree, the manifests and the index
+  describe one commit (AC-13).
 - **AC-18** WHEN a stored tour exists, the system shall return it without a model call.
 - **AC-19** WHEN the user regenerates and it succeeds, the system shall replace the
   stored tour.
@@ -149,3 +153,10 @@ excerpts) is rewritten to match AC-7–AC-10.
 - 2026-10-08 — AC-9 narrowed after a live run on this repo: PageRank pools rank in files
   that import nothing, so `styles.ts` and `constants.ts` filled the reading path. They
   are left out; the order stays rank order.
+- 2026-10-08 — after the plan-verifier pass: AC-7 says what "one call" means (no re-prompt;
+  the code passed the adapter's default of two re-prompts and was fixed); AC-9 names the
+  file-name rule; AC-16 covers a missing clone (the code built a tour of an empty tree);
+  AC-24 added — the tree came from the clone's head while links used the indexed commit.
+  Code also fixed for AC-4 (the note now names every empty index part and shows in
+  model-written tours), AC-6 (the cap measured compact JSON, the prompt sends it
+  indented) and AC-12 (bare URLs and reference links survived).

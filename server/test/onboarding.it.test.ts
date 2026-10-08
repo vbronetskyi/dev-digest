@@ -57,11 +57,12 @@ d('L05 onboarding generator — SPEC-02 (Testcontainers pg)', () => {
     await pg?.stop();
   });
 
-  async function appWith(llm: MockLLMProvider, git = new MockGitClient({ files: FILES }), flag = 'true') {
+  // The clone's HEAD matches the seeded index (AC-13) unless a test says otherwise.
+  async function appWith(llm: MockLLMProvider | null, git = new MockGitClient({ files: FILES, head: 'base123' }), flag = 'true') {
     const app = await buildApp({
       config: config(flag),
       db: pg.handle.db,
-      overrides: { embedder: new MockEmbedder(), git, github: new MockGitHubClient({ pulls: [] }), llm: { openrouter: llm, openai: llm } },
+      overrides: { embedder: new MockEmbedder(), git, github: new MockGitHubClient({ pulls: [] }), llm: llm ? { openrouter: llm, openai: llm } : {} },
     });
     apps.push(app);
     return app;
@@ -95,13 +96,35 @@ d('L05 onboarding generator — SPEC-02 (Testcontainers pg)', () => {
     const res = await app.inject({ method: 'POST', url: `/repos/${unindexed}/onboarding` });
     expect(res.statusCode).toBe(409);
     expect(res.json().error.message).toMatch(/Index it first/);
-    const off = await appWith(new MockLLMProvider('openai'), new MockGitClient({ files: FILES }), 'false');
-    expect((await off.inject({ method: 'POST', url: `/repos/${await repo({ indexed: true })}/onboarding` })).statusCode).toBe(409);
+    const off = await appWith(new MockLLMProvider('openai'), new MockGitClient({ files: FILES, head: 'base123' }), 'false');
+    const offRes = await off.inject({ method: 'POST', url: `/repos/${await repo({ indexed: true })}/onboarding` });
+    expect(offRes.statusCode).toBe(409);
+    expect(offRes.json().error.message).toMatch(/index the repository first/);
+  });
+
+  it('AC-13: refuses when there is no clone, or the clone and the index describe different commits', async () => {
+    const llm = new MockLLMProvider('openai', { structuredBySchema: { OnboardingTour: OUTPUT('x') } });
+    const noClone = await appWith(llm, new MockGitClient({ noClone: true }));
+    const a = await noClone.inject({ method: 'POST', url: `/repos/${await repo({ indexed: true })}/onboarding` });
+    expect(a.statusCode).toBe(409);
+    expect(a.json().error.message).toMatch(/no local clone/);
+    const moved = await appWith(llm, new MockGitClient({ files: FILES, head: 'newhead9' }));
+    const b = await moved.inject({ method: 'POST', url: `/repos/${await repo({ indexed: true })}/onboarding` });
+    expect(b.statusCode).toBe(409);
+    expect(b.json().error.message).toMatch(/clone is at newhead but the index is at base123/);
+    expect(tourCalls(llm)).toHaveLength(0);
+  });
+
+  it('AC-14: with no provider key the tour is a skeleton that says why', async () => {
+    const app = await appWith(null);
+    const tour = (await app.inject({ method: 'POST', url: `/repos/${await repo({ indexed: true })}/onboarding` })).json().onboarding;
+    expect(tour.meta).toMatchObject({ source: 'skeleton', model: null, cost_usd: null });
+    expect(tour.meta.reason).toMatch(/key/i);
   });
 
   it('AC-3/AC-5/AC-7/AC-9/AC-13/AC-18: one model call over facts, only package.json read, meta stored, GET free', async () => {
     const llm = new MockLLMProvider('openai', { structuredBySchema: { OnboardingTour: OUTPUT('first') } });
-    const git = new MockGitClient({ files: FILES });
+    const git = new MockGitClient({ files: FILES, head: 'base123' });
     const app = await appWith(llm, git);
     const repoId = await repo({ indexed: true });
     expect((await app.inject({ method: 'GET', url: `/repos/${repoId}/onboarding` })).json()).toEqual({ onboarding: null });
@@ -110,8 +133,11 @@ d('L05 onboarding generator — SPEC-02 (Testcontainers pg)', () => {
     expect(res.statusCode).toBe(200);
     const tour = res.json().onboarding;
     expect(tourCalls(llm)).toHaveLength(1);
+    // AC-7: no re-prompting — an answer off the schema becomes a skeleton instead.
+    expect((tourCalls(llm)[0]!.req as { maxRetries?: number }).maxRetries).toBe(0);
     expect(tour.meta).toMatchObject({ source: 'model', model: 'deepseek/deepseek-v4-flash', cost_usd: 0.001, indexed_sha: 'base123', files_total: 9 });
     expect(git.reads.sort()).toEqual(['package.json', 'server/package.json']);
+    expect(git.worktreeReads).toEqual([]);
 
     const user = (tourCalls(llm)[0]!.req as { messages: { content: string }[] }).messages[1]!.content;
     expect(user).toContain('<untrusted source="facts">');

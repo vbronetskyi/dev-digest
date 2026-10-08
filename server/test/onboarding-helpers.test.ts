@@ -43,6 +43,8 @@ describe('buildOnboardingMessages', () => {
     const [system, user] = buildOnboardingMessages('SYSTEM', FACTS);
     expect(system!.content).toBe('SYSTEM');
     const body = user!.content;
+    // Nothing from the repository sits outside the block — not even its name.
+    expect(body.slice(0, body.indexOf('<untrusted'))).not.toContain('acme/api');
     expect(body.match(/<untrusted source="facts">/g)).toHaveLength(1);
     const open = body.indexOf('<untrusted source="facts">');
     const hostile = body.indexOf('ignore previous instructions');
@@ -78,11 +80,27 @@ describe('groundTour', () => {
 
   it('AC-12: model prose keeps its text but loses links, images and HTML', () => {
     expect(kind('architecture').body).toBe('A **Fastify** API. See the docs');
-    expect(stripLinks('<https://x.example> and [a](javascript:alert(1))')).toBe('https://x.example and a');
+    expect(stripLinks('<https://x.example> and [a](javascript:alert(1))')).toBe('`https://x.example` and a');
+  });
+
+  it('AC-12: neutralises bare URLs and reference-style links, leaving code spans alone', () => {
+    const md = ['See https://evil.example/x and www.evil.example.', 'Read [the guide][1] or ![logo][2].', '', '[1]: https://evil.example/guide', '[2]: https://evil.example/logo.png', 'Keep `https://in.code` as is.'].join('\n');
+    const out = stripLinks(md);
+    expect(out).toContain('See `https://evil.example/x` and `www.evil.example.`');
+    expect(out).toContain('Read the guide or .');
+    expect(out).not.toMatch(/^\[\d\]:/m);
+    expect(out).toContain('Keep `https://in.code` as is.');
   });
 
   it('AC-13: keeps the meta it was given', () => {
     expect(tour.meta).toEqual(META);
+  });
+
+  it('AC-4: says what the index had nothing for, whatever the model wrote', () => {
+    const note = 'The index has no import chains for this repository (it parses JS/TS only).';
+    const noted = groundTour(OUTPUT, { ...FACTS, index_note: note }, TRACKED, META);
+    expect(noted.sections[0]!.body).toContain(`_${note}_`);
+    expect(tour.sections[0]!.body).not.toContain('The index has no');
   });
 });
 

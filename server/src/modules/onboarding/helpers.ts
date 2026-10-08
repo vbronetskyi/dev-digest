@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { ChatMessage, Onboarding, OnboardingLink, OnboardingMeta, OnboardingSection } from '@devdigest/shared';
 import { wrapUntrusted } from '../../platform/prompt.js';
 import { READING_PATH_LEN, SECTIONS, type SectionKind } from './constants.js';
-import type { RepoFacts } from './facts.js';
+import { serializeFacts, type RepoFacts } from './facts.js';
 
 /** What the model returns: prose per section and notes keyed by paths it was given (AC-7, AC-8). */
 const Note = z.object({ path: z.string(), note: z.string() });
@@ -21,27 +21,40 @@ export function buildOnboardingMessages(system: string, facts: RepoFacts): ChatM
     { role: 'system', content: system },
     {
       role: 'user',
-      content: `Write the onboarding tour for ${facts.repo}.\n\n## Facts\n${wrapUntrusted('facts', JSON.stringify(facts, null, 1))}`,
+      // Fixed text outside the block; the repository name lives inside the facts.
+      content: `Write the onboarding tour for the repository these facts describe.\n\n## Facts\n${wrapUntrusted('facts', serializeFacts(facts))}`,
     },
   ];
 }
 
 // A link target may hold one level of parentheses: (javascript:alert(1)).
 const MD_IMAGE = /!\[[^\]]*\]\((?:[^()]|\([^()]*\))*\)/g;
+const MD_REF_IMAGE = /!\[[^\]]*\]\[[^\]]*\]/g;
 const MD_LINK = /\[([^\]]*)\]\((?:[^()]|\([^()]*\))*\)/g;
+const MD_REF_LINK = /\[([^\]]+)\]\[[^\]]*\]/g;
+const MD_REF_DEFINITION = /^ {0,3}\[[^\]]+\]:\s*\S+.*$/gm;
 const AUTOLINK = /<((?:https?|mailto|javascript|data):[^>\s]*)>/gi;
 const HTML_TAG = /<\/?[a-z][^>]*>/gi;
 /** Script and style blocks go whole — their content is not prose. */
 const HTML_BLOCK = /<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi;
+/** A bare URL or www. host outside a code span — GFM would turn it into a link. */
+const BARE_URL = /(`[^`]*`)|((?:https?:\/\/|www\.)[^\s<>`)\]]+)/gi;
 
-/** AC-12: model prose keeps its text, never its links, images or HTML. */
+/**
+ * AC-12: model prose keeps its text, never its links, images or HTML. Bare
+ * URLs stay readable as code spans, which Markdown never turns into links.
+ */
 export function stripLinks(markdown: string): string {
   return markdown
     .replace(HTML_BLOCK, '')
     .replace(MD_IMAGE, '')
+    .replace(MD_REF_IMAGE, '')
+    .replace(MD_REF_DEFINITION, '')
     .replace(MD_LINK, '$1')
+    .replace(MD_REF_LINK, '$1')
     .replace(AUTOLINK, '$1')
     .replace(HTML_TAG, '')
+    .replace(BARE_URL, (match, code: string | undefined) => (code ? match : `\`${match}\``))
     .trim();
 }
 
@@ -89,12 +102,14 @@ export function groundTour(output: OnboardingOutput, facts: RepoFacts, tracked: 
   const stepNotes = notesFor(output.reading_path.notes, steps);
   const manifestLinks = facts.manifests.filter((m) => keep(m.path, tracked)).map((m) => ({ label: m.name ?? m.path, path: m.path }));
 
-  const criticalBody = [stripLinks(output.critical_paths.body), chains.length > 0 ? chainList(chains, chainNotes) : facts.index_note ?? '']
+  const criticalBody = [stripLinks(output.critical_paths.body), chains.length > 0 ? chainList(chains, chainNotes) : '']
     .filter(Boolean)
     .join('\n\n');
+  // AC-4: when the index had nothing for a part, the tour says so, whatever the model wrote.
+  const architectureBody = [stripLinks(output.architecture.body), facts.index_note ? `_${facts.index_note}_` : ''].filter(Boolean).join('\n\n');
   return {
     sections: [
-      section('architecture', stripLinks(output.architecture.body), manifestLinks, cleanDiagram(output.architecture.diagram)),
+      section('architecture', architectureBody, manifestLinks, cleanDiagram(output.architecture.diagram)),
       section('critical_paths', criticalBody, chains.map((c) => ({ label: chainNotes.get(c[0]!) ?? c.map(baseName).join(' → '), path: c[0]! }))),
       section('how_to_run', stripLinks(output.how_to_run.body)),
       section(
@@ -143,7 +158,8 @@ export function skeletonTour(facts: RepoFacts, tracked: ReadonlySet<string>, met
     `**${facts.repo}** — ${facts.files_total} committed files. Languages: ${langs}.`,
     packages.length ? `**Packages**\n${packages.join('\n')}` : '',
     dirs.length ? `**Top-level layout**\n${dirs.join('\n')}` : '',
-    endpointCount || cronCount ? `The index found ${endpointCount} endpoints and ${cronCount} cron jobs.` : facts.index_note ?? '',
+    endpointCount || cronCount ? `The index found ${endpointCount} endpoints and ${cronCount} cron jobs.` : '',
+    facts.index_note ? `_${facts.index_note}_` : '',
   ].filter(Boolean);
   const steps = runSteps(facts);
   const chains = facts.chains.filter((c) => c.every((p) => keep(p, tracked)));
@@ -156,7 +172,7 @@ export function skeletonTour(facts: RepoFacts, tracked: ReadonlySet<string>, met
   return {
     sections: [
       section('architecture', architecture.join('\n\n'), facts.manifests.filter((m) => keep(m.path, tracked)).map((m) => ({ label: m.name ?? m.path, path: m.path }))),
-      section('critical_paths', chains.length ? chainList(chains, new Map()) : facts.index_note ?? 'The index has no import chains for this repository.', chains.map((c) => ({ label: c.map(baseName).join(' → '), path: c[0]! }))),
+      section('critical_paths', chains.length ? chainList(chains, new Map()) : 'The index has no import chains for this repository.', chains.map((c) => ({ label: c.map(baseName).join(' → '), path: c[0]! }))),
       section('how_to_run', steps.length ? steps.map((s) => `- \`${s}\``).join('\n') : 'No package scripts, Compose file or Dockerfile found.'),
       section('reading_path', readingFallback(reading), reading.map((p, i) => ({ label: rankLabel(i), path: p }))),
       section('first_tasks', tasks.length ? tasks.join('\n') : 'No obvious first tasks from the facts alone.'),

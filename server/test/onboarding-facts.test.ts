@@ -1,12 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import {
   capFacts,
+  indexNoteFor,
   infraFrom,
+  isReadingPathCandidate,
   languagesFrom,
   managerFor,
   manifestPaths,
   packageManagerFrom,
   parseManifest,
+  serializeFacts,
   topDirsFrom,
   type RepoFacts,
 } from '../src/modules/onboarding/facts.js';
@@ -107,11 +110,34 @@ describe('capFacts', () => {
     index_note: null,
   });
 
-  it('AC-6: trims the longest lists until the facts fit, keeping order and the reading path', () => {
+  it('AC-6: trims the longest lists until the text sent fits, keeping order and the reading path', () => {
     const capped = capFacts(facts(2000), 24_000);
-    expect(JSON.stringify(capped).length).toBeLessThanOrEqual(24_000);
+    // Measured on the exact serialization the prompt uses, not on compact JSON.
+    expect(serializeFacts(capped).length).toBeLessThanOrEqual(24_000);
     expect(capped.endpoints[0]!.file).toBe('src/routes/r0.ts');
     expect(capped.top_files).toEqual(['src/app.ts']);
     expect(capFacts(facts(3), 24_000)).toEqual(facts(3));
+  });
+});
+
+describe('indexNoteFor', () => {
+  it('AC-4: names each part the index had nothing for, and is null when it had all of them', () => {
+    expect(indexNoteFor({ endpoints: 3, crons: 0, topFiles: 8, chains: 2 })).toBeNull();
+    expect(indexNoteFor({ endpoints: 0, crons: 1, topFiles: 8, chains: 2 })).toBeNull();
+    expect(indexNoteFor({ endpoints: 0, crons: 0, topFiles: 8, chains: 0 })).toBe(
+      'The index has no import chains, no endpoints or cron jobs for this repository (it parses JS/TS only).',
+    );
+    expect(indexNoteFor({ endpoints: 0, crons: 0, topFiles: 0, chains: 0 })).toMatch(/^The index has no ranked files, no import chains, no endpoints or cron jobs/);
+  });
+});
+
+describe('isReadingPathCandidate', () => {
+  it('AC-9: leaves out style, constant and type modules by file name, at any depth', () => {
+    for (const path of ['styles.ts', 'client/x/_components/Card/styles.ts', 'server/src/modules/blast/constants.ts', 'src/types.ts', 'types.tsx', 'src/global.d.ts', 'style.ts']) {
+      expect(isReadingPathCandidate(path)).toBe(false);
+    }
+    for (const path of ['server/src/app.ts', 'src/stylesheet.ts', 'src/type-guards.ts', 'src/constants-loader.ts']) {
+      expect(isReadingPathCandidate(path)).toBe(true);
+    }
   });
 });

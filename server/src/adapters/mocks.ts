@@ -259,8 +259,10 @@ export interface MockGitOptions {
 
 export class MockGitClient implements GitClient {
   public cloned: { repo: RepoRef; url: string }[] = [];
-  /** Paths passed to `readFile`, in order — lets tests assert what was opened. */
+  /** Paths read from the commit (`readCommitted`), in order. */
   public reads: string[] = [];
+  /** Paths read from the working tree (`readFile`) — kept apart so tests can tell the two. */
+  public worktreeReads: string[] = [];
   public syncs: { repo: RepoRef; branch: string }[] = [];
   private syncedHead?: string;
 
@@ -299,7 +301,7 @@ export class MockGitClient implements GitClient {
     return [{ sha: 'a1b2c3d4', message: 'init', author: 'marisa.koch', date: '2026-06-01' }];
   }
   async readFile(_repo: RepoRef, path: string): Promise<string> {
-    this.reads.push(path);
+    this.worktreeReads.push(path);
     return this.opts.files?.[path] ?? '';
   }
   async readCommitted(_repo: RepoRef, path: string): Promise<string | null> {

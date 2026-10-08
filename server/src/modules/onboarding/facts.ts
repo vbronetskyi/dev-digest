@@ -11,6 +11,7 @@ import {
   MAX_LANGUAGES,
   MAX_MANIFESTS,
   MAX_SCRIPTS,
+  READING_PATH_EXCLUDED_NAME,
   SCRIPT_MAX_CHARS,
 } from './constants.js';
 
@@ -49,6 +50,30 @@ export interface RepoFacts {
 }
 
 const baseName = (path: string) => path.slice(path.lastIndexOf('/') + 1);
+
+/** The exact text the facts take in the prompt — AC-6 measures this, not a compact copy. */
+export function serializeFacts(facts: RepoFacts): string {
+  return JSON.stringify(facts, null, 1);
+}
+
+/**
+ * AC-4: what the tour says when the index had nothing for one of its parts.
+ * Null when it had something for each (endpoints or crons, ranked files, chains).
+ */
+export function indexNoteFor(parts: { endpoints: number; crons: number; topFiles: number; chains: number }): string | null {
+  const missing = [
+    parts.topFiles === 0 ? 'ranked files' : null,
+    parts.chains === 0 ? 'import chains' : null,
+    parts.endpoints === 0 && parts.crons === 0 ? 'endpoints or cron jobs' : null,
+  ].filter(Boolean);
+  if (missing.length === 0) return null;
+  return `The index has no ${missing.join(', no ')} for this repository (it parses JS/TS only).`;
+}
+
+/** AC-9: style, constant and type modules by file name — ranked high as import sinks, poor first reads. */
+export function isReadingPathCandidate(path: string): boolean {
+  return !READING_PATH_EXCLUDED_NAME.test(baseName(path));
+}
 const depth = (path: string) => path.split('/').length - 1;
 
 /** AC-1: committed files per language, by extension; unknown extensions are not a language. */
@@ -151,7 +176,7 @@ export function capFacts(facts: RepoFacts, maxChars = FACTS_MAX_CHARS): RepoFact
   const out: RepoFacts = structuredClone(facts);
   out.chains = out.chains.slice(0, MAX_CHAINS);
   out.context_docs = out.context_docs.slice(0, MAX_CONTEXT_DOCS);
-  const size = () => JSON.stringify(out).length;
+  const size = () => serializeFacts(out).length;
   const trimmers: Array<() => boolean> = [
     () => shrink(out.endpoints),
     () => shrink(out.crons),
