@@ -3,8 +3,10 @@ import {
   FEATURE_MODELS,
   FeatureModelChoice,
   type FeatureModelId,
+  type LLMProvider,
 } from '@devdigest/shared';
 import type { Container } from '../../platform/container.js';
+import { ConfigError } from '../../platform/errors.js';
 import * as t from '../../db/schema.js';
 
 /**
@@ -55,4 +57,27 @@ export async function resolveFeatureModel(
   id: FeatureModelId,
 ): Promise<FeatureModelChoice> {
   return (await getFeatureModelOverride(container, workspaceId, id)) ?? DEFAULTS[id];
+}
+
+/**
+ * A provider + model for a system feature: the Settings choice; else the registry
+ * default; and when that provider has no key, OpenRouter with `openrouterModel` —
+ * the provider most workspaces here are set up with. Throws ConfigError only when
+ * no candidate has a key.
+ */
+export async function resolveFeatureLlm(
+  container: Container,
+  workspaceId: string,
+  id: FeatureModelId,
+  openrouterModel: string,
+): Promise<{ llm: LLMProvider; model: string }> {
+  const override = await getFeatureModelOverride(container, workspaceId, id);
+  if (override) return { llm: await container.llm(override.provider), model: override.model };
+  const fallback = DEFAULTS[id];
+  try {
+    return { llm: await container.llm(fallback.provider), model: fallback.model };
+  } catch (err) {
+    if (!(err instanceof ConfigError)) throw err;
+  }
+  return { llm: await container.llm('openrouter'), model: openrouterModel };
 }
