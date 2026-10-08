@@ -224,7 +224,25 @@ export interface GitClient {
   blame(repo: RepoRef, path: string): Promise<BlameLine[]>;
   log(repo: RepoRef, path?: string): Promise<GitCommit[]>;
   readFile(repo: RepoRef, path: string): Promise<string>;
+  /**
+   * Files committed at HEAD of the clone (the default branch it tracks), with
+   * blob sizes — read from the git tree, no file is opened; untracked, ignored
+   * files and symbolic links never appear. `null` when the repo has no clone.
+   */
+  listFiles(repo: RepoRef): Promise<TrackedFile[] | null>;
+  /**
+   * A file's content as committed at HEAD (`git show HEAD:<path>`) — never the
+   * working tree, so a symlink is its target text, not the file it points at.
+   * `null` when the path is not in the commit or there is no clone.
+   */
+  readCommitted(repo: RepoRef, path: string): Promise<string | null>;
   clonePathFor(repo: RepoRef): string;
+}
+
+/** A file in the committed tree. */
+export interface TrackedFile {
+  path: string;
+  bytes: number;
 }
 
 // ---------- CodeIndex (ripgrep + tree-sitter) ----------
