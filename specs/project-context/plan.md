@@ -18,55 +18,55 @@ skill-level context, reading from the PR head.
 
 ## Tasks
 
-- [ ] T1 `listFiles` + `readCommitted` on the port, the simple-git adapter and
+- [x] T1 `listFiles` + `readCommitted` on the port, the simple-git adapter and
   `MockGitClient` → AC-1, AC-2, AC-16 → `test/git-list-files.test.ts` (real temp repo)
-- [ ] T2 Pure helpers `modules/_shared/project-context.ts`: folder kind (deepest wins),
+- [x] T2 Pure helpers `modules/_shared/project-context.ts`: folder kind (deepest wins),
   docs from the tree, packing into the budget with the cut marker → AC-1, AC-10, AC-11 →
   `test/project-context-helpers.test.ts`
-- [ ] T3 Migration for `agents.context_paths`; `GET/PUT /agents/:id/context` (dedupe,
+- [x] T3 Migration for `agents.context_paths`; `GET/PUT /agents/:id/context` (dedupe,
   then the zod limits) → AC-6, AC-7 → `test/context.it.test.ts`
-- [ ] T4 `context` module: `GET /repos/:id/context` (docs + agents using each, `no_clone`),
+- [x] T4 `context` module: `GET /repos/:id/context` (docs + agents using each, `no_clone`),
   `GET /repos/:id/context/file?path=` (listed paths only, 256 KB cap) → AC-1, AC-3, AC-4,
   AC-5 → `test/context.it.test.ts`
-- [ ] T5 Run executor: resolve the agent's paths against the list, read from the commit,
+- [x] T5 Run executor: resolve the agent's paths against the list, read from the commit,
   pack, log the commit and what was cut / left out / missing, pass `specs`, fill
   `specs_read` on done and failed runs → AC-8, AC-9, AC-11, AC-12, AC-13, AC-14, AC-16,
   AC-17 → `test/context.it.test.ts`
-- [ ] T6 reviewer-core: the trusted rule before the Project context blocks, only when
+- [x] T6 reviewer-core: the trusted rule before the Project context blocks, only when
   there are documents → AC-15, AC-17 → `reviewer-core/test/prompt.test.ts`
-- [ ] T7 Client hooks + Project Context page `/repos/:repoId/context` + nav item; safe
+- [x] T7 Client hooks + Project Context page `/repos/:repoId/context` + nav item; safe
   Markdown; `activeKeyFor` fixed so `/onboarding` (add repo) is not the tour → AC-18,
   AC-19 → `ContextPage.test.tsx`, `app-shell/helpers.test.ts`
-- [ ] T8 Agent editor Context tab → AC-20, AC-21, AC-22 → `ContextTab.test.tsx`
-- [ ] T9 Docs: `server/specs/context.md`, `client/specs/pages.md`, `AGENTS.md` read-when,
+- [x] T8 Agent editor Context tab → AC-20, AC-21, AC-22 → `ContextTab.test.tsx`
+- [x] T9 Docs: `server/specs/context.md`, `client/specs/pages.md`, `AGENTS.md` read-when,
   insights (plumbing, no AC)
 
 ## Traceability matrix
 
 | AC | Tasks | Tests | Commit |
 |---|---|---|---|
-| AC-1 | T1, T2, T4 | git-list-files, project-context-helpers, context.it | |
-| AC-2 | T1 | git-list-files "symlinks" | |
-| AC-3 | T4 | context.it "no clone" | |
-| AC-4 | T4 | context.it "only listed paths" | |
-| AC-5 | T4 | context.it "256 KB" | |
-| AC-6 | T3 | context.it "order, dedupe" | |
-| AC-7 | T3 | context.it "422" | |
-| AC-8 | T5 | context.it "review reads attached docs" | |
-| AC-9 | T5 | context.it "missing path" | |
-| AC-10 | T2 | project-context-helpers "cut" | |
-| AC-11 | T2, T5 | project-context-helpers "skip", context.it log | |
-| AC-12 | T5 | context.it "map-reduce" | |
-| AC-13 | T5 | context.it trace (done + failed) | |
-| AC-14 | T5 | context.it assembly + commit log | |
-| AC-15 | T6 | prompt.test | |
-| AC-16 | T1, T5 | git-list-files "commit, not worktree", context.it | |
-| AC-17 | T5, T6 | prompt.test, context.it "no context" | |
-| AC-18 | T7 | ContextPage.test | |
-| AC-19 | T7 | ContextPage.test "safe markdown, used by" | |
-| AC-20 | T8 | ContextTab.test | |
-| AC-21 | T8 | ContextTab.test "soft cap" | |
-| AC-22 | T8 | ContextTab.test "missing" | |
+| AC-1 | T1, T2, T4 | git-list-files, project-context-helpers, context.it | 21b3f33, d355f1a, e650b8a |
+| AC-2 | T1 | git-list-files "symlinks" | 21b3f33 |
+| AC-3 | T4 | context.it "no clone" | e650b8a |
+| AC-4 | T4 | context.it "only listed paths" | e650b8a |
+| AC-5 | T4 | context.it "256 KB" | e650b8a |
+| AC-6 | T3 | context.it "order, dedupe" | df4b382 |
+| AC-7 | T3 | context.it "422" | df4b382 |
+| AC-8 | T5 | context.it "review reads attached docs" | 6919473, 3c379df, 34876bc |
+| AC-9 | T5 | context.it "missing path" | 6919473 |
+| AC-10 | T2 | project-context-helpers "cut" | d355f1a |
+| AC-11 | T2, T5 | project-context-helpers "skip", context.it log | d355f1a, 6919473 |
+| AC-12 | T5 | context.it "map-reduce" | 6919473 |
+| AC-13 | T5 | context.it trace (done + failed) | 6919473 |
+| AC-14 | T5 | context.it assembly + commit log | 6919473 |
+| AC-15 | T6 | prompt.test | ba6d561 |
+| AC-16 | T1, T5 | git-list-files "commit, not worktree", context.it | 21b3f33, 6919473 |
+| AC-17 | T5, T6 | prompt.test, context.it "no context" | ba6d561, 6919473 |
+| AC-18 | T7 | ContextPage.test | c868a6d |
+| AC-19 | T7 | ContextPage.test "safe markdown, used by" | c868a6d, 3bf3677 |
+| AC-20 | T8 | ContextTab.test | 1d20a06, 781903c |
+| AC-21 | T8 | ContextTab.test "soft cap" | 1d20a06 |
+| AC-22 | T8 | ContextTab.test "missing" | 1d20a06 |
 
 ## Risks
 

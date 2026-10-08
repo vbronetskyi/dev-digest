@@ -1,4 +1,4 @@
-# Spec: Onboarding Generator | Spec ID: SPEC-02 | Status: approved
+# Spec: Onboarding Generator | Spec ID: SPEC-02 | Status: implemented
 
 ## Problem and why
 
