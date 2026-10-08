@@ -18,6 +18,7 @@
       "Edit(./client/pnpm-lock.yaml)",
       "Edit(./reviewer-core/package-lock.json)",
       "Edit(./e2e/package-lock.json)",
+      "Edit(./mcp/package-lock.json)",
       "Edit(./skills-lock.json)",
       "Read(./server/.env)",
       "Read(./client/.env)",
