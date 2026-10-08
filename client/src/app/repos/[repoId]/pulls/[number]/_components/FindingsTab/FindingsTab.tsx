@@ -6,7 +6,8 @@ import { RunStatus } from "../RunStatus";
 import { RunHistory } from "../RunHistory/RunHistory";
 import { ReviewRunAccordion } from "../ReviewRunAccordion";
 import { s } from "./styles";
-import type { FindingRecord, ReviewRecord, RunSummary, PrCommit } from "@devdigest/shared";
+import type { FindingRecord, ReviewRecord, RunSummary, PrCommit, SeverityCounts } from "@devdigest/shared";
+import { countBySeverity } from "@/lib/findings";
 import type { UseMutationResult } from "@tanstack/react-query";
 
 interface FindingsTabProps {
@@ -67,6 +68,15 @@ export function FindingsTab({
   // opens + scrolls to that run's accordion below. The nonce re-triggers the
   // scroll even when the same run is clicked twice.
   const [target, setTarget] = React.useState<{ runId: string; n: number } | null>(null);
+
+  // Timeline severity icons, counted from the reviews already on the page.
+  const severityByRun = React.useMemo(() => {
+    const byRun: Record<string, SeverityCounts> = {};
+    for (const review of runs) {
+      if (review.run_id) byRun[review.run_id] = countBySeverity(review.findings);
+    }
+    return byRun;
+  }, [runs]);
   const handleGoToReview = useCallback((runId: string) => {
     setTarget((p) => ({ runId, n: (p?.n ?? 0) + 1 }));
   }, []);
@@ -134,6 +144,7 @@ export function FindingsTab({
             onOpenTrace={handleOpenTrace}
             onGoToReview={handleGoToReview}
             onDelete={handleDelete}
+            severityByRun={severityByRun}
           />
         </div>
       )}

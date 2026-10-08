@@ -3,8 +3,10 @@
 import React from "react";
 import { useTranslations } from "next-intl";
 import { Badge, Icon, CircularScore, type IconName } from "@devdigest/ui";
-import type { RunSummary, PrCommit } from "@devdigest/shared";
+import type { RunSummary, PrCommit, SeverityCounts } from "@devdigest/shared";
 import { CostBadge } from "@/components/cost-badge";
+import { SeverityCount, severityStyles } from "@/components/severity";
+import { presentSeverities } from "@/lib/findings";
 
 /**
  * PR timeline — every agent run interleaved with the PR's commits, newest-first
@@ -91,6 +93,7 @@ export function RunHistory({
   onOpenTrace,
   onGoToReview,
   onDelete,
+  severityByRun,
 }: {
   runs: RunSummary[];
   commits?: PrCommit[];
@@ -99,6 +102,8 @@ export function RunHistory({
   /** Jump to this run's inline review accordion below (clicking the agent name). */
   onGoToReview?: (runId: string) => void;
   onDelete?: (runId: string) => void;
+  /** Findings per severity for each run that produced a review, keyed by run id. */
+  severityByRun?: Record<string, SeverityCounts>;
 }) {
   const t = useTranslations("prReview");
   if (runs.length === 0 && commits.length === 0) return null;
@@ -193,6 +198,18 @@ export function RunHistory({
                 <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
                   {t("runStatus.findings", { count: r.findings_count ?? 0 })}
                   {(r.blockers ?? 0) > 0 ? t("runStatus.blockers", { count: r.blockers ?? 0 }) : ""}
+                  {severityByRun?.[r.run_id] && (
+                    <span style={{ ...severityStyles.row, marginLeft: 10, verticalAlign: "middle" }}>
+                      {presentSeverities(severityByRun[r.run_id]!).map((sev) => (
+                        <SeverityCount
+                          key={sev}
+                          severity={sev}
+                          count={severityByRun[r.run_id]![sev]}
+                          label={t(`panel.severity.${sev}`)}
+                        />
+                      ))}
+                    </span>
+                  )}
                 </div>
               )}
             </div>

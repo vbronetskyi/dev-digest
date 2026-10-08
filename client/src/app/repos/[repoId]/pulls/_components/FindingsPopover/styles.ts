@@ -1,0 +1,67 @@
+import type { CSSProperties } from "react";
+import type { Placement } from "./helpers";
+
+/** Co-located styles for FindingsPopover. */
+export const s = {
+  popover: (place: Placement, width: number): CSSProperties => ({
+    position: "fixed",
+    top: place.top,
+    bottom: place.bottom,
+    left: place.left,
+    width,
+    zIndex: 60,
+    background: "var(--bg-elevated)",
+    border: "1px solid var(--border-strong)",
+    borderRadius: 10,
+    boxShadow: "var(--shadow-modal)",
+    padding: 12,
+    animation: "ddpop .12s ease",
+    cursor: "default",
+    textAlign: "left",
+  }),
+  header: {
+    display: "flex",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 9,
+    fontSize: 10.5,
+    fontWeight: 700,
+    letterSpacing: "0.06em",
+    textTransform: "uppercase",
+    color: "var(--text-muted)",
+  } satisfies CSSProperties,
+  list: (maxHeight: number): CSSProperties => ({
+    display: "flex",
+    flexDirection: "column",
+    gap: 9,
+    maxHeight,
+    overflow: "auto",
+  }),
+  item: (last: boolean): CSSProperties => ({
+    paddingBottom: last ? 0 : 9,
+    borderBottom: last ? "none" : "1px solid var(--border)",
+  }),
+  itemHead: { display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" } satisfies CSSProperties,
+  title: { fontSize: 12.5, fontWeight: 600, color: "var(--text-primary)" } satisfies CSSProperties,
+  meta: { display: "flex", alignItems: "center", gap: 10, marginTop: 5 } satisfies CSSProperties,
+  location: {
+    fontSize: 11,
+    color: "var(--accent-text)",
+    minWidth: 0,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  } satisfies CSSProperties,
+  confidence: { flexShrink: 0, whiteSpace: "nowrap" } satisfies CSSProperties,
+  rationale: {
+    marginTop: 5,
+    fontSize: 11.5,
+    lineHeight: 1.45,
+    color: "var(--text-secondary)",
+    display: "-webkit-box",
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: "vertical",
+    overflow: "hidden",
+  } satisfies CSSProperties,
+  status: { fontSize: 12, color: "var(--text-muted)" } satisfies CSSProperties,
+};
