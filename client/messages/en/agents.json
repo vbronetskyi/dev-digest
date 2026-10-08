@@ -46,6 +46,7 @@
     "tabs": {
       "config": "Config",
       "skills": "Skills",
+      "context": "Context",
       "evals": "Evals",
       "stats": "Stats",
       "ci": "CI"
@@ -107,5 +108,29 @@
   },
   "mount": {
     "body": "Mount point for {owner}. The Agent Editor shell + tab routing are wired by A2 — {owner} renders this tab."
+  },
+  "context": {
+    "title": "Project context",
+    "attachedCount": "{attached} of {total} attached",
+    "orderHint": "Order matters: earlier documents come first in the review prompt. Tick to attach, drag to reorder; changes save at once.",
+    "attached": "Attached",
+    "available": "Available in {repo}",
+    "noneAttached": "Nothing attached — this agent reviews without project context.",
+    "filterPlaceholder": "Filter documents…",
+    "preview": "Preview {name}",
+    "missing": "not in {repo}",
+    "missingHint": "Attached, but this repository has no such document, so its reviews skip it.",
+    "remove": "Remove {name}",
+    "moveUp": "Move {name} up",
+    "moveDown": "Move {name} down",
+    "drag": "Drag to reorder",
+    "tokens": "≈ {tokens} tokens attached",
+    "overCap": "over the {cap} soft cap",
+    "footer": "Injected into every review by this agent as untrusted blocks under “Project context”, up to 8K tokens.",
+    "saveError": "Couldn’t save the agent’s context. It was reverted.",
+    "noRepo": "Pick a repository in the sidebar to see its documents.",
+    "noClone": "{repo} is not cloned yet, so its documents can’t be listed. Index it first.",
+    "noDocs": "{repo} has no Markdown under specs/, docs/ or insights/ yet.",
+    "loadError": "Couldn’t load the repository’s documents"
   }
 }
