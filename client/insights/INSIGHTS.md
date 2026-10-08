@@ -55,6 +55,13 @@ Disabling every filter button whose level has zero findings also disabled the
 button that could not be released. Fix: never disable the active filter.
 Evidence: `src/app/repos/[repoId]/pulls/[number]/_components/FindingsPanel/FindingsPanel.tsx:93`
 
+### 2026-10-08 — `borderColor` is a shorthand too
+React warns "Updating borderColor … when a conflicting property is set" if a
+style object holds `borderColor` next to `borderLeftColor` and a rerender
+changes it. FindingCard did, so every severity filter click logged the warning
+(the Next dev badge showed "1 Issue"). Use per-side colours.
+Evidence: `src/app/repos/[repoId]/pulls/[number]/_components/FindingCard/styles.ts:10`
+
 ## Session Notes
 
 ### 2026-10-07 — Lab 1: run cost
