@@ -8,6 +8,7 @@ describe('contextFolderOf', () => {
     expect(contextFolderOf('server/docs/architecture.md')).toBe('docs');
     expect(contextFolderOf('docs/specs/x.md')).toBe('specs');
     expect(contextFolderOf('client/insights/INSIGHTS.md')).toBe('insights');
+    expect(contextFolderOf('docs/GUIDE.MD')).toBe('docs');
   });
 
   it('AC-1: leaves out non-Markdown, files outside those folders and node_modules', () => {

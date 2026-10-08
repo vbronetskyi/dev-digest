@@ -3,7 +3,8 @@ import type { Container } from '../../platform/container.js';
 import { NotFoundError } from '../../platform/errors.js';
 import { contextDocsFrom } from '../_shared/project-context.js';
 import { ContextRepository } from './repository.js';
-import { DOC_CUT_MARKER, MAX_DOC_BYTES } from './constants.js';
+import { MAX_DOC_BYTES } from './constants.js';
+import { cutAtBytes } from './helpers.js';
 
 /**
  * SPEC-01 — the reviewed repository's specs/, docs/ and insights/ Markdown,
@@ -42,14 +43,4 @@ export class ContextService {
     if (!ref) throw new NotFoundError('Repository not found');
     return ref;
   }
-}
-
-/** The first `max` bytes of UTF-8 text, never ending inside a character, plus the cut marker. */
-export function cutAtBytes(text: string, max: number): string {
-  const bytes = Buffer.from(text, 'utf8');
-  if (bytes.length <= max) return text;
-  // A UTF-8 continuation byte is 10xxxxxx: step back to the start of the character it belongs to.
-  let end = max;
-  while (end > 0 && (bytes[end]! & 0xc0) === 0x80) end--;
-  return bytes.subarray(0, end).toString('utf8') + DOC_CUT_MARKER;
 }

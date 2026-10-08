@@ -75,11 +75,14 @@ d('L05 project context folder — SPEC-01 (Testcontainers pg)', () => {
     const a = await agent();
     const ok = await attach(a.id, ['docs/architecture.md', 'specs/public-api.md', 'docs/architecture.md']);
     expect(ok.json()).toEqual({ paths: ['docs/architecture.md', 'specs/public-api.md'] });
-    for (const bad of [['../secret.md'], ['/etc/x.md'], ['specs/notes.txt'], Array.from({ length: 21 }, (_, i) => `specs/${i}.md`)]) {
+    for (const bad of [['../secret.md'], ['/etc/x.md'], ['specs/notes.txt'], ['specs\\win.md'], [`specs/${'a'.repeat(300)}.md`], Array.from({ length: 21 }, (_, i) => `specs/${i}.md`)]) {
       expect((await attach(a.id, bad)).statusCode).toBe(422);
     }
     // A rejected request stores nothing: the earlier save is still there.
     expect((await app.inject({ method: 'GET', url: `/agents/${a.id}/context` })).json()).toEqual({ paths: ['docs/architecture.md', 'specs/public-api.md'] });
+    // The extension is matched in any case.
+    expect((await attach(a.id, ['docs/GUIDE.MD'])).json()).toEqual({ paths: ['docs/GUIDE.MD'] });
+    await attach(a.id, ['docs/architecture.md', 'specs/public-api.md']);
     // 21 entries with one duplicate leave 20: accepted.
     const twenty = Array.from({ length: 20 }, (_, i) => `specs/${i}.md`);
     expect((await attach(a.id, [...twenty, 'specs/0.md'])).json().paths).toHaveLength(20);
