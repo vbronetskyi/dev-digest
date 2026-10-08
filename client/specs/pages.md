@@ -37,6 +37,9 @@ then:
 - `usePrActiveRuns` → `GET /pulls/:id/runs/active` — polled while runs are live.
 - Trace drawer (`?trace=<runId>`) → `GET /runs/:id/trace`, live log over SSE.
 
+**Overview tab** — the PR description and the blast radius card
+(`blast-radius.md`), loaded after the PR detail.
+
 **Agent runs tab** (`?tab=findings`) has two sections:
 
 - **Timeline** — runs and commits interleaved, newest first. A run tile shows

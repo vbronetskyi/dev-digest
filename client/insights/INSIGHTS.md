@@ -97,6 +97,12 @@ changes it. FindingCard did, so every severity filter click logged the warning
 (the Next dev badge showed "1 Issue"). Use per-side colours.
 Evidence: `src/app/repos/[repoId]/pulls/[number]/_components/FindingCard/styles.ts:10`
 
+### 2026-10-08 — Starter message files are not plural-aware
+`blast.json` shipped `"{count} callers"` and bare `"symbols"`, so the card read
+"1 callers", "1 symbols". Use ICU plurals and pass `count` even to labels that
+sit next to a separately rendered number.
+Evidence: `src/app/repos/[repoId]/pulls/[number]/_components/BlastRadiusCard/BlastRadiusCard.tsx:48`
+
 ## Session Notes
 
 ### 2026-10-07 — Lab 1: run cost
