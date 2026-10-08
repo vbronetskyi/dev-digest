@@ -4,7 +4,7 @@
 
 import React from "react";
 import { useTranslations } from "next-intl";
-import { Badge } from "@devdigest/ui";
+import { Badge, MonoLink } from "@devdigest/ui";
 import type { RunTrace, FindingRecord } from "@devdigest/shared";
 import { PROMPT_COLORS } from "../../constants";
 import { formatSeconds, formatTokens } from "../../helpers";
@@ -32,6 +32,20 @@ export function TraceBody({ trace, findings }: { trace: RunTrace; findings: Find
             <span className="mono" style={s.configProvider}>
               {trace.config.provider ?? "—"}
             </span>
+          </Row>
+          {/* name@version the run was told, linked to that skill's history */}
+          <Row label={t("trace.config.skills")}>
+            <div style={s.specsWrap}>
+              {!trace.config.skills?.length ? (
+                <span style={s.specsNone}>{t("trace.config.none")}</span>
+              ) : (
+                trace.config.skills.map((sk) => (
+                  <MonoLink key={sk.id} href={`/skills?skill=${sk.id}&tab=versions`}>
+                    {sk.name}@v{sk.version}
+                  </MonoLink>
+                ))
+              )}
+            </div>
           </Row>
           <Row label={t("trace.config.memoryPulled")}>
             <span>{t("trace.config.items", { count: trace.memory_pulled.length })}</span>

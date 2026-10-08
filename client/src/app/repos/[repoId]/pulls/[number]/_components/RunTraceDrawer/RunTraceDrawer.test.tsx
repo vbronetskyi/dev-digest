@@ -19,8 +19,11 @@ const TRACE: RunTrace = {
   ],
 };
 
+const hooks = vi.hoisted(() => ({ trace: undefined as RunTrace | undefined }));
+hooks.trace = TRACE;
+
 vi.mock("../../../../../../../lib/hooks/trace", () => ({
-  useRunTrace: () => ({ data: TRACE, isLoading: false }),
+  useRunTrace: () => ({ data: hooks.trace, isLoading: false }),
 }));
 vi.mock("../../../../../../../lib/hooks/reviews", () => ({
   useRunEvents: () => ({ events: [], running: false }),
@@ -28,7 +31,10 @@ vi.mock("../../../../../../../lib/hooks/reviews", () => ({
 
 import RunTraceDrawer from "./RunTraceDrawer";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  hooks.trace = TRACE;
+});
 
 function renderWithIntl(ui: React.ReactElement) {
   return render(
@@ -51,6 +57,13 @@ describe("A5 Run Trace drawer (smoke)", () => {
     renderWithIntl(<RunTraceDrawer runId="r1" agentName="Security" prNumber={482} onClose={() => {}} />);
     expect(screen.getByText("COST")).toBeInTheDocument();
     expect(screen.getByText("$0.0123")).toBeInTheDocument();
+  });
+
+  it("lists the skill versions the run was told, linked to their history", () => {
+    const withSkills = { ...TRACE, config: { ...TRACE.config, skills: [{ id: "sk1", name: "query-efficiency", version: 2 }] } };
+    hooks.trace = withSkills;
+    renderWithIntl(<RunTraceDrawer runId="r1" agentName="Security" prNumber={482} onClose={() => {}} />);
+    expect(screen.getByRole("link", { name: "query-efficiency@v2" })).toHaveAttribute("href", "/skills?skill=sk1&tab=versions");
   });
 
   it("switches to the live log tab", () => {
