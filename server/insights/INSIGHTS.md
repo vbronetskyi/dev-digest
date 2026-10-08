@@ -67,6 +67,19 @@ Evidence: `../reviewer-core/src/llm/openrouter.ts:54`, `src/modules/reviews/run-
 
 ## Recurring Errors & Fixes
 
+### 2026-10-08 — A stalled model call hangs a run indefinitely (supersedes "~13 minutes")
+Supersedes the 2026-10-08 Tool & Library note "A hung model call keeps a run
+'running' for many minutes": the bound there is wrong. The openai SDK clears its
+timeout once response **headers** arrive (`fetchWithTimeout` → `.finally`), then
+reads the body with `response.json()` and no limit. OpenRouter answers 200 at
+once and holds the body open while the model generates, so a stalled generation
+hangs the run with no upper bound — observed for 11+ minutes with the socket to
+OpenRouter still ESTABLISHED. Cancel does not help: it flips the row to
+`cancelled`, but no AbortSignal reaches the request, which stays open.
+Fix direction: pass an AbortSignal with a total deadline (and the run's cancel
+flag) into `completeStructured`.
+Evidence: `../reviewer-core/node_modules/openai/core.js:386`, `../reviewer-core/src/llm/openrouter.ts:69`
+
 ## Session Notes
 
 ### 2026-10-07 — Lab 1: run cost
@@ -94,3 +107,10 @@ the model is still called and billed, and the run is stored as `approve`/100.
 Fix candidates: fetch `refs/pull/N/head` before diffing, and fail the run when
 the diff is empty instead of reviewing nothing.
 Evidence: `src/modules/reviews/diff-loader.ts:20`, `src/modules/reviews/diff-loader.ts:29`
+
+### 2026-10-08 — Can a cancelled run come back as `done`?
+After a cancel, the in-flight call keeps going. If it ever returns, `runOneAgent`
+persists the review and calls `completeAgentRun` with `status: 'done'`
+unconditionally, which would overwrite `cancelled`. Not reproduced yet.
+Evidence: `src/modules/reviews/run-executor.ts:244`
+
