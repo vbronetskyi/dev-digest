@@ -39,3 +39,10 @@ export class ConfigError extends AppError {
     super('config_error', message, 500, details);
   }
 }
+
+/** The request is valid but the resource is not in a state that allows it (409). */
+export class ConflictError extends AppError {
+  constructor(message: string, details?: unknown) {
+    super('conflict', message, 409, details);
+  }
+}
