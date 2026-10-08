@@ -98,7 +98,8 @@ d('L02 skills (Testcontainers pg)', () => {
 
     const imported = await app.inject({ method: 'POST', url: '/skills/import', payload: { url: pageUrl, type: 'convention' } });
     expect(imported.statusCode).toBe(201);
-    expect(imported.json()).toMatchObject({ source: 'imported_url', source_url: RAW_URL, type: 'convention', body: 'Use kebab-case paths.' });
+    // Imported skills stay disabled until a human vets and enables them.
+    expect(imported.json()).toMatchObject({ source: 'imported_url', source_url: RAW_URL, type: 'convention', body: 'Use kebab-case paths.', enabled: false });
 
     const missing = await app.inject({ method: 'POST', url: '/skills/import/preview', payload: { url: 'https://example.com/nope.md' } });
     expect(missing.statusCode).toBe(422);

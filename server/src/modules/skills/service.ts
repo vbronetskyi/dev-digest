@@ -95,9 +95,12 @@ export class SkillsService {
       throw new ValidationError('The fetched skill is not valid', parsed.error.flatten());
     }
     await this.assertNameFree(workspaceId, parsed.data.name);
+    // Third-party text lands disabled: enabling it is the human vetting step, and
+    // a disabled skill never reaches a prompt even if an agent already links it.
     const row = await this.repo.create({
       workspaceId,
       ...parsed.data,
+      enabled: false,
       source: 'imported_url',
       sourceUrl: preview.source_url,
     });
