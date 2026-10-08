@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { CiFailOn, Provider, ReviewStrategy } from '@devdigest/shared';
+import { CiFailOn, CONTEXT_MAX_PATHS, ContextPath, Provider, ReviewStrategy } from '@devdigest/shared';
 import { getContext } from '../_shared/context.js';
 import { IdParams } from '../_shared/schemas.js';
 import { NotFoundError } from '../../platform/errors.js';
@@ -26,6 +26,8 @@ const VersionParams = z.object({
  *   GET    /agents/:id/versions/:version → one config snapshot
  *   GET    /agents/:id/skills       → linked skills (ordered)
  *   POST   /agents/:id/skills       → set/reorder linked skills OR link one
+ *   GET    /agents/:id/context      → attached project-context paths (ordered)
+ *   PUT    /agents/:id/context      → set them (SPEC-01)
  *   GET    /agents/:id/models       → dynamic model list for the agent's provider
  *   GET    /providers/:id/models    → dynamic model list for a provider (editor)
  */
@@ -66,6 +68,14 @@ const SetSkillsBody = z
   .refine((b) => b.skill_ids !== undefined || b.skill_id !== undefined, {
     message: 'Provide skill_ids (set/reorder) or skill_id (link one)',
   });
+
+/** Duplicates are dropped first; the document limit applies to what is left (SPEC-01 AC-6, AC-7). */
+const SetContextBody = z.object({
+  paths: z
+    .array(ContextPath)
+    .transform((paths) => [...new Set(paths)])
+    .refine((paths) => paths.length <= CONTEXT_MAX_PATHS, { message: `at most ${CONTEXT_MAX_PATHS} documents` }),
+});
 
 export default async function agentsRoutes(appBase: FastifyInstance) {
   const app = appBase.withTypeProvider<ZodTypeProvider>();
@@ -163,6 +173,20 @@ export default async function agentsRoutes(appBase: FastifyInstance) {
       return links;
     },
   );
+
+  app.get('/agents/:id/context', { schema: { params: IdParams } }, async (req) => {
+    const { workspaceId } = await getContext(app.container, req);
+    const context = await service.context(workspaceId, req.params.id);
+    if (!context) throw new NotFoundError('Agent not found');
+    return context;
+  });
+
+  app.put('/agents/:id/context', { schema: { params: IdParams, body: SetContextBody } }, async (req) => {
+    const { workspaceId } = await getContext(app.container, req);
+    const context = await service.setContext(workspaceId, req.params.id, req.body.paths);
+    if (!context) throw new NotFoundError('Agent not found');
+    return context;
+  });
 
   app.get('/agents/:id/models', { schema: { params: IdParams } }, async (req) => {
     const { workspaceId } = await getContext(app.container, req);
