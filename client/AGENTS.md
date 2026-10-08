@@ -46,4 +46,5 @@ pnpm test       # vitest + jsdom, fetch mocked — no API or browser needed
 - Severity counts, filters or the PR list findings preview → `specs/findings-by-severity.md`
 - Skills Lab (skills, conventions), the agent Skills tab or skills in the trace → `specs/skills-ui.md`
 - The PR Overview blast radius card → `specs/blast-radius.md`
+- The Files changed tab (Smart Diff, finding markers in the diff viewer) → `specs/smart-diff.md`
 - Before any task in this package → `insights/INSIGHTS.md`

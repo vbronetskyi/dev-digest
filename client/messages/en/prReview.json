@@ -58,14 +58,46 @@
     "blockers": " · {count} blockers"
   },
   "smartDiff": {
-    "coreLabel": "Core",
+    "title": "Files changed · {count, plural, one {# file} other {# files}}",
+    "order": {
+      "smart": "Smart order",
+      "original": "Original order"
+    },
+    "coreLabel": "Core logic",
     "wiringLabel": "Wiring",
     "boilerplateLabel": "Boilerplate",
-    "largeTitle": "This PR is large ({lines} changed lines)",
+    "coreDesc": "The substance of the change — review closely",
+    "wiringDesc": "Hooks the core into the app",
+    "boilerplateDesc": "Tests, docs, generated and mechanical files — skim",
+    "largeTitle": "This PR is large: {reviewable} changed lines to review ({total} in total)",
     "largeBody": "Consider splitting it into smaller, focused PRs for easier review:",
-    "filesCount": "{count} files",
-    "findingLines": "{count} finding-lines",
-    "groupedByRole": "Smart Diff · grouped by role"
+    "noCleanSplit": "Its changes sit in one area, so there is no clean cut. Review core logic first, then wiring.",
+    "moreFiles": "+{count} more",
+    "filesCount": "{count, plural, one {# file} other {# files}}",
+    "findingLines": "{count, plural, one {# finding line} other {# finding lines}}",
+    "groupedByRole": "Smart Diff · grouped by role",
+    "markers": "{count, plural, =0 {No review yet — finding markers appear after a run.} one {Finding markers from the latest review.} other {Finding markers from the latest review of each of # agents.}}",
+    "markersStale": "Markers are from a review of an earlier commit: lines may have shifted since.",
+    "unavailable": "Smart order is unavailable, so files are shown as GitHub lists them.",
+    "showComments": "Show comments ({count})",
+    "hideComments": "Hide comments ({count})",
+    "commentError": "Couldn't post the comment to GitHub.",
+    "reason": {
+      "entrypoint": "entry point",
+      "imports_only": "imports and registration",
+      "config": "config",
+      "migration": "migration",
+      "infra": "CI / infra",
+      "lockfile": "lockfile",
+      "generated": "generated",
+      "test": "test",
+      "docs": "docs",
+      "i18n": "translations",
+      "assets": "asset",
+      "styles": "styles",
+      "tooling": "tooling config",
+      "rename": "renamed, no line changes"
+    }
   },
   "list": {
     "breadcrumb": "Pull Requests",

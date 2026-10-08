@@ -57,6 +57,7 @@ export const s = {
     userSelect: "none",
     flexShrink: 0,
   } satisfies CSSProperties,
+  fileNote: { fontSize: 11.5, color: "var(--text-muted)", whiteSpace: "nowrap" } satisfies CSSProperties,
   lineText: {
     flex: 1,
     whiteSpace: "pre-wrap",
@@ -88,5 +89,33 @@ export function lineSignFor(kind: Line["kind"]): CSSProperties {
     textAlign: "center",
     color: kind === "add" ? "var(--code-add-text)" : kind === "del" ? "var(--code-del-text)" : "var(--text-muted)",
     flexShrink: 0,
+  };
+}
+
+/** Header chip with the file's finding count, in its worst severity's colour. */
+export function findingCountFor(color: string): CSSProperties {
+  return { display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 600, color };
+}
+
+/** Left gutter bar on lines a finding covers. */
+export function findingBarFor(color: string): CSSProperties {
+  return { position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: color };
+}
+
+/** Finding title at the end of the line it starts on. */
+export function findingLabelFor(color: string): CSSProperties {
+  return {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 4,
+    maxWidth: "40%",
+    paddingRight: 12,
+    fontSize: 11.5,
+    fontWeight: 600,
+    color,
+    flexShrink: 0,
+    overflow: "hidden",
+    whiteSpace: "nowrap",
+    textOverflow: "ellipsis",
   };
 }

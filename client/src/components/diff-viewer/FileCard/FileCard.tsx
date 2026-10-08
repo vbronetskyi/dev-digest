@@ -1,13 +1,15 @@
 /* FileCard — one collapsible file in the diff: header (path, +/- stat, comment
-   count) and, when open, its parsed lines plus any outdated comments. */
+   count, Smart Diff finding count and role note) and, when open, its parsed
+   lines plus any outdated comments. */
 "use client";
 
 import React from "react";
 import { useTranslations } from "next-intl";
-import { Icon } from "@devdigest/ui";
+import { Icon, SEV } from "@devdigest/ui";
+import type { Severity } from "@devdigest/shared";
 import type { PrFile } from "@/lib/types";
 import { AUTO_EXPAND_MAX_LINES } from "../constants";
-import { parsePatch, type Line } from "../helpers";
+import { bySeverity, markFor, parsePatch, type FileAnnotation, type Line } from "../helpers";
 import {
   buildThreads,
   keysForLine,
@@ -15,7 +17,7 @@ import {
   type CommentThread,
   type DiffCommentApi,
 } from "../comments";
-import { s, chevronFor } from "../styles";
+import { s, chevronFor, findingCountFor } from "../styles";
 import { CodeLine } from "../CodeLine";
 import { OutdatedComments } from "../OutdatedComments";
 
@@ -30,12 +32,22 @@ function threadsForLine(ln: Line, matched: Map<string, CommentThread[]>): Commen
   return out;
 }
 
-export function FileCard({ file, commenting }: { file: PrFile; commenting?: DiffCommentApi }) {
+export function FileCard({
+  file,
+  commenting,
+  annotation,
+}: {
+  file: PrFile;
+  commenting?: DiffCommentApi;
+  annotation?: FileAnnotation;
+}) {
   const t = useTranslations("shell");
   const [open, setOpen] = React.useState(
-    (file.additions ?? 0) + (file.deletions ?? 0) <= AUTO_EXPAND_MAX_LINES
+    annotation?.defaultOpen ?? (file.additions ?? 0) + (file.deletions ?? 0) <= AUTO_EXPAND_MAX_LINES
   );
   const lines = React.useMemo(() => parsePatch(file.patch), [file.patch]);
+  const findings = annotation?.findings ?? [];
+  const worst = findings.length > 0 ? [...findings].sort(bySeverity)[0]!.severity : null;
 
   // Group this file's comments into threads, then split into ones we can anchor
   // to a rendered line vs. "outdated" (GitHub dropped the line / it's not here).
@@ -60,6 +72,8 @@ export function FileCard({ file, commenting }: { file: PrFile; commenting?: Diff
         <span className="mono" style={s.filePath}>
           {file.path}
         </span>
+        {worst && <FindingCount severity={worst} label={t("diffViewer.findings", { count: findings.length })} />}
+        {annotation?.note && <span style={s.fileNote}>{annotation.note}</span>}
         <span className="mono tnum" style={s.fileStat}>
           <span style={s.addText}>+{file.additions}</span>{" "}
           <span style={s.delText}>−{file.deletions}</span>
@@ -85,6 +99,7 @@ export function FileCard({ file, commenting }: { file: PrFile; commenting?: Diff
                 path={file.path}
                 threads={threadsForLine(ln, matched)}
                 commenting={commenting}
+                mark={markFor(ln, findings)}
               />
             ))
           )}
@@ -92,5 +107,16 @@ export function FileCard({ file, commenting }: { file: PrFile; commenting?: Diff
         </div>
       )}
     </div>
+  );
+}
+
+function FindingCount({ severity, label }: { severity: Severity; label: string }) {
+  const meta = SEV[severity];
+  const I = Icon[meta.icon];
+  return (
+    <span style={findingCountFor(meta.c)} data-severity={severity}>
+      <I size={12} aria-hidden />
+      {label}
+    </span>
   );
 }

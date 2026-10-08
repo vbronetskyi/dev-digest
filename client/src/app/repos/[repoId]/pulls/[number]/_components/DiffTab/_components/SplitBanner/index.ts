@@ -1,0 +1,1 @@
+export { SplitBanner } from "./SplitBanner";
