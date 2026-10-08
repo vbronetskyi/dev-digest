@@ -15,5 +15,19 @@
     "blame": "blame",
     "noHistory": "No history available for this line.",
     "noCommits": "No commits found for this line."
+  },
+  "intent": {
+    "inScope": "IN SCOPE",
+    "outOfScope": "OUT OF SCOPE",
+    "noneStated": "Nothing stated",
+    "empty": "Not derived yet. The next review derives it, or derive it now.",
+    "derive": "Derive intent",
+    "rederive": "Re-derive",
+    "deriving": "Deriving…",
+    "cost": "One model call",
+    "meta": "Derived by {model} · {cost} · for {sha}",
+    "stale": "The PR has new commits since this was derived. The next review derives it again.",
+    "failed": "Could not derive the intent: {message}",
+    "loadError": "Could not load the intent."
   }
 }
