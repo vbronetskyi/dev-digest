@@ -9,3 +9,4 @@ binary images never enter the code history or a PR diff.
   (`hw1-findings-by-severity.mp4`, GIF preview alongside) (PR #5)
 - `lab-2/` — Skills Lab: skill editor tabs, file and URL import, agent Skills tab, conventions extractor,
   skill versions in the trace drawer (PR #6)
+- `lab-4/` — devdigest-mcp in MCP Inspector: the five tools, list_agents result (PR #7)
