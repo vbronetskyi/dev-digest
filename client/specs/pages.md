@@ -37,8 +37,11 @@ then:
 - `usePrActiveRuns` → `GET /pulls/:id/runs/active` — polled while runs are live.
 - Trace drawer (`?trace=<runId>`) → `GET /runs/:id/trace`, live log over SSE.
 
-**Overview tab** — the PR description and the blast radius card
-(`blast-radius.md`), loaded after the PR detail.
+**Overview tab** — the PR description, the intent card and the blast radius card
+(`blast-radius.md`), loaded after the PR detail. The intent card reads
+`GET /pulls/:id/intent` (free) and derives only on click (`POST`, one model call):
+intent quote, in/out of scope, "Derived by <model> · <cost> · for <sha>", and a
+note when the PR head moved since.
 
 **Agent runs tab** (`?tab=findings`) has two sections:
 

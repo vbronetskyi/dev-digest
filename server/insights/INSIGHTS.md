@@ -75,6 +75,14 @@ index is built — request-time analysis, and slow. The blast service checks
 `getIndexState` first and answers `not_indexed` instead.
 Evidence: `src/modules/blast/service.ts:31`
 
+### 2026-10-08 — The intent is shared pre-work, billed to the PR, not to a run
+`run-executor` derives (or reuses) the PR intent once per execution, before the
+agents, and passes it to each. Its cost sits on `pr_intent.cost_usd`, not in a
+run's `cost_usd`, because one derivation serves every agent and later runs on
+the same head. Tests that count model calls per run must skip `schemaName ===
+'PrIntent'`.
+Evidence: `src/modules/reviews/run-executor.ts:113`, `src/modules/reviews/intent.ts:138`
+
 ## Tool & Library Notes
 
 ### 2026-10-07 — OpenRouter usage counters lag behind the generation
@@ -156,6 +164,15 @@ persists them), and throws `EmptyDiffError` when none has a patch, so the run
 fails with a reason instead of approving nothing with score 100. This mattered
 once MCP started reviews over the API: nobody opens the PR page there.
 Evidence: `src/modules/reviews/diff-loader.ts:24`, `src/modules/reviews/diff-loader.ts:8`, `test/run-result.it.test.ts:1`
+
+### 2026-10-08 — Integration tests could call real APIs with real keys
+`config.ts` does `import 'dotenv/config'`, so under vitest `process.env` held the
+keys from `server/.env`, and the default secrets store was the developer's
+`~/.devdigest/secrets.json`. A test that mocked only `anthropic` sent the intent
+call to the real OpenRouter (it showed as a 10 s timeout). In `NODE_ENV=test`
+the store is now a temp file and the container ignores env keys — mock every
+provider a test needs.
+Evidence: `src/platform/container.ts:90`, `src/platform/config.ts:76`
 
 ## Session Notes
 

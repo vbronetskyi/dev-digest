@@ -48,5 +48,6 @@ pnpm db:migrate && pnpm db:seed                   # not run on boot
 - Touching skills, their import or how a run uses them → `specs/skills.md`
 - Touching the conventions extractor → `specs/conventions.md`
 - Touching blast radius → `specs/blast.md`
+- Touching the PR intent layer → `specs/intent.md`
 - Writing tests → `../TESTING.md` (and the `.it.test.ts` rule)
 - Before any task in this package → `insights/INSIGHTS.md`
