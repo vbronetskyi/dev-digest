@@ -1,0 +1,2 @@
+# drizzle-kit output: collapse in GitHub diffs, keep out of language stats
+server/src/db/migrations/meta/*.json linguist-generated=true
