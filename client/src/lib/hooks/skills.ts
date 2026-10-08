@@ -6,6 +6,7 @@ import { api } from "../api";
 import type {
   AgentSkillLink,
   Skill,
+  SkillFileImport,
   SkillImportPreview,
   SkillImportRequest,
   SkillInput,
@@ -89,6 +90,22 @@ export function useImportSkill() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (req: SkillImportRequest) => api.post<Skill>("/skills/import", req),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["skills"] }),
+  });
+}
+
+/** Parse an uploaded / pasted SKILL.md without saving it. */
+export function usePreviewSkillFile() {
+  return useMutation({
+    mutationFn: (req: Pick<SkillFileImport, "text" | "filename">) =>
+      api.post<SkillImportPreview>("/skills/import/file/preview", req),
+  });
+}
+
+export function useImportSkillFile() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (req: SkillFileImport) => api.post<Skill>("/skills/import/file", req),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["skills"] }),
   });
 }

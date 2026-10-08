@@ -98,7 +98,7 @@ export function SkillConfigForm({
       )}
 
       <FormField label={t("config.name")} required hint={t("config.nameHint")}>
-        <TextInput value={draft.name} onChange={(v) => set("name", v)} mono placeholder={t("file.namePlaceholder")} />
+        <TextInput value={draft.name} onChange={(v) => set("name", v)} mono placeholder={t("config.namePlaceholder")} />
       </FormField>
       <FormField label={t("config.description")} required>
         <TextInput value={draft.description} onChange={(v) => set("description", v)} />

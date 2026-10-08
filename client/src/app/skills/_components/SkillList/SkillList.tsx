@@ -8,6 +8,7 @@ import type { SkillListItem } from "@devdigest/shared";
 import { useUpdateSkill } from "@/lib/hooks/skills";
 import { SkillCard } from "../SkillCard";
 import { filterSkills } from "@/lib/skills";
+import type { ImportMode } from "../../constants";
 import { s } from "./styles";
 
 export function SkillList({
@@ -23,7 +24,7 @@ export function SkillList({
   selectedId: string | null;
   onSelect: (id: string) => void;
   onCreate: () => void;
-  onImport: () => void;
+  onImport: (mode: ImportMode) => void;
 }) {
   const t = useTranslations("skills");
   const update = useUpdateSkill();
@@ -44,7 +45,8 @@ export function SkillList({
               </Button>
             }
             items={[
-              { label: t("page.menu.fromUrl"), icon: "Link", onClick: onImport },
+              { label: t("page.menu.fromFile"), icon: "Upload", onClick: () => onImport("file") },
+              { label: t("page.menu.fromUrl"), icon: "Link", onClick: () => onImport("url") },
               { divider: true },
               { label: t("list.create"), icon: "Edit", onClick: onCreate },
             ]}
@@ -58,7 +60,13 @@ export function SkillList({
           <Skeleton height={92} />
         </div>
       ) : (skills ?? []).length === 0 ? (
-        <EmptyState icon="Sparkles" title={t("page.empty.title")} body={t("page.empty.body")} />
+        <EmptyState
+          icon="Sparkles"
+          title={t("page.empty.title")}
+          body={t("page.empty.body")}
+          cta={t("page.empty.cta")}
+          onCta={() => onImport("file")}
+        />
       ) : (
         <div style={s.list}>
           {shown.length === 0 ? (

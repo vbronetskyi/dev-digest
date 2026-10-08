@@ -3,6 +3,10 @@ import type { CSSProperties } from "react";
 /** Co-located styles for ImportSkillDrawer. */
 export const s = {
   body: { padding: 24 } satisfies CSSProperties,
+  tabs: { margin: "-24px -24px 20px" } satisfies CSSProperties,
+  pickRow: { display: "flex", alignItems: "center", gap: 12, marginBottom: 12 } satisfies CSSProperties,
+  picked: { fontSize: 12.5, color: "var(--text-secondary)" } satisfies CSSProperties,
+  or: { fontSize: 12, color: "var(--text-muted)", marginBottom: 8 } satisfies CSSProperties,
   footer: { display: "flex", justifyContent: "flex-end", gap: 8 } satisfies CSSProperties,
   error: { fontSize: 12.5, color: "var(--crit)", marginTop: -8, marginBottom: 16 } satisfies CSSProperties,
   warnings: {

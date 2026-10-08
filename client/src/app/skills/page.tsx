@@ -12,7 +12,7 @@ import { ApiError } from "@/lib/api";
 import { ImportSkillDrawer } from "./_components/ImportSkillDrawer";
 import { SkillEditor } from "./_components/SkillEditor";
 import { SkillList } from "./_components/SkillList";
-import { EDITOR_TABS, NEW_SKILL } from "./constants";
+import { EDITOR_TABS, NEW_SKILL, type ImportMode } from "./constants";
 import { s } from "./styles";
 
 const DEFAULT_TAB = "config";
@@ -22,7 +22,7 @@ export default function SkillsPage() {
   const router = useRouter();
   const search = useSearchParams();
   const { data: skills, isLoading, isError, error, refetch } = useSkills();
-  const [importing, setImporting] = React.useState(false);
+  const [importing, setImporting] = React.useState<ImportMode | null>(null);
 
   const selected = search.get("skill");
   const requestedTab = search.get("tab") ?? "";
@@ -60,7 +60,7 @@ export default function SkillsPage() {
           selectedId={selected}
           onSelect={(id) => go(id, tab)}
           onCreate={() => go(NEW_SKILL)}
-          onImport={() => setImporting(true)}
+          onImport={setImporting}
         />
         <main style={s.main}>
           {selected ? (
@@ -80,9 +80,10 @@ export default function SkillsPage() {
       </div>
       {importing && (
         <ImportSkillDrawer
-          onClose={() => setImporting(false)}
+          initialMode={importing}
+          onClose={() => setImporting(null)}
           onImported={(skill) => {
-            setImporting(false);
+            setImporting(null);
             go(skill.id);
           }}
         />

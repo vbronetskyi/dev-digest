@@ -68,7 +68,7 @@ describe("SkillConfigForm", () => {
 
   it("warns about an imported skill and links its source", () => {
     renderForm(IMPORTED);
-    expect(screen.getByRole("note")).toHaveTextContent("untrusted source");
+    expect(screen.getByRole("note")).toHaveTextContent("came from outside the workspace");
     expect(screen.getByText(IMPORTED.source_url!)).toBeInTheDocument();
   });
 
