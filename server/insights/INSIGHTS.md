@@ -80,6 +80,16 @@ Fix direction: pass an AbortSignal with a total deadline (and the run's cancel
 flag) into `completeStructured`.
 Evidence: `../reviewer-core/node_modules/openai/core.js:386`, `../reviewer-core/src/llm/openrouter.ts:69`
 
+### 2026-10-08 — Cancel is overwritten when the hung call finally dies (answers the open question)
+Answers the 2026-10-08 Open Question "Can a cancelled run come back as `done`?":
+yes, the terminal status is overwritten — observed as `failed`. Run `8d9c2c8e` was
+cancelled at ~11 min; at 879 s the OS socket gave up (`read ETIMEDOUT`), the
+executor's catch ran `completeAgentRun({ status: 'failed' })` and replaced
+`cancelled`. A late success would write `done` the same way. In practice the
+hang is bounded only by the OS TCP timeout (~15 min here). It recurred on a
+second run the same morning, so it is not a one-off.
+Evidence: `src/modules/reviews/run-executor.ts:301`, `../reviewer-core/src/llm/openrouter.ts:69`
+
 ## Session Notes
 
 ### 2026-10-07 — Lab 1: run cost
