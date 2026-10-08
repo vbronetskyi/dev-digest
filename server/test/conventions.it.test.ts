@@ -61,8 +61,8 @@ d('L02 conventions extractor (Testcontainers pg)', () => {
     fixtures.ConventionFileSelection = { files: ['src/routes.ts', '../../etc/passwd'] };
     fixtures.ConventionExtraction = {
       conventions: [
-        { rule: 'Scope every handler with getContext', evidence_path: 'src/routes.ts', evidence_snippet: QUOTE, confidence: 0.9 },
-        { rule: 'Invented rule', evidence_path: 'src/routes.ts', evidence_snippet: 'await authorize(req);', confidence: 0.8 },
+        { rule: 'Scope every handler with getContext', evidence_path: 'src/routes.ts', evidence_snippet: QUOTE, also_seen_in: ['src/service.ts'], confidence: 0.9 },
+        { rule: 'Invented rule', evidence_path: 'src/routes.ts', evidence_snippet: 'await authorize(req);', also_seen_in: [], confidence: 0.8 },
       ],
     };
     const before = await app.inject({ method: 'GET', url: `/repos/${repoId}/conventions` });
@@ -76,7 +76,7 @@ d('L02 conventions extractor (Testcontainers pg)', () => {
     expect(body.dropped).toBe(1);
     expect(body.cost_usd).toBeCloseTo(0.002);
     expect(body.candidates).toMatchObject([
-      { rule: 'Scope every handler with getContext', evidence_path: 'src/routes.ts:2-2', evidence_snippet: QUOTE, confidence: 0.9, accepted: false },
+      { rule: 'Scope every handler with getContext', evidence_path: 'src/routes.ts:2', evidence_snippet: QUOTE, confidence: 0.6, accepted: false },
     ]);
 
     const [, second] = llm.calls.map((c) => c.req as { messages: ChatMessage[] });
@@ -104,7 +104,7 @@ d('L02 conventions extractor (Testcontainers pg)', () => {
   it('a re-scan replaces pending candidates and keeps accepted ones', async () => {
     fixtures.ConventionExtraction = {
       conventions: [
-        { rule: 'Return the service result directly', evidence_path: 'src/routes.ts', evidence_snippet: 'return service.list(workspaceId);', confidence: 0.7 },
+        { rule: 'Return the service result directly', evidence_path: 'src/routes.ts', evidence_snippet: 'return service.list(workspaceId);', also_seen_in: [], confidence: 0.7 },
       ],
     };
     const res = await extract();
@@ -135,7 +135,7 @@ d('L02 conventions extractor (Testcontainers pg)', () => {
 
   it('rejects by deleting, and refuses to scan an unindexed repo', async () => {
     fixtures.ConventionExtraction = {
-      conventions: [{ rule: 'Something to reject', evidence_path: 'src/routes.ts', evidence_snippet: QUOTE, confidence: 0.5 }],
+      conventions: [{ rule: 'Something to reject', evidence_path: 'src/routes.ts', evidence_snippet: QUOTE, also_seen_in: [], confidence: 0.5 }],
     };
     const pending = ((await extract()).json() as ConventionExtraction).candidates.find((c) => !c.accepted)!;
     expect((await app.inject({ method: 'DELETE', url: `/conventions/${pending.id}` })).json()).toEqual({ ok: true });

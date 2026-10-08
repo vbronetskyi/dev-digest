@@ -43,9 +43,19 @@ describe('groundConventions', () => {
       files,
     );
     expect(dropped).toBe(0);
+    // Seen in one file only, so the model's 1.4 is cut to the single-file ceiling.
     expect(kept).toEqual([
-      { rule: 'Scope every handler with getContext', evidencePath: 'src/modules/skills/routes.ts:4-4', evidenceSnippet: quote, confidence: 1 },
+      { rule: 'Scope every handler with getContext', evidencePath: 'src/modules/skills/routes.ts:4', evidenceSnippet: quote, confidence: 0.6 },
     ]);
+  });
+
+  it('caps confidence by how many sampled files show the rule', () => {
+    const three = new Map([...files, ['src/a.ts', ''], ['src/b.ts', '']]);
+    const cap = (also: string[]) =>
+      groundConventions([{ rule: 'R', evidence_path: 'src/modules/skills/routes.ts', evidence_snippet: quote, also_seen_in: also, confidence: 0.95 }], three).kept[0]!.confidence;
+    expect(cap([])).toBe(0.6);
+    expect(cap(['src/a.ts', 'src/not-sampled.ts'])).toBe(0.8);
+    expect(cap(['src/a.ts', 'src/b.ts'])).toBe(0.95);
   });
 
   it('drops unknown files, invented quotes and duplicate rules', () => {
@@ -70,8 +80,11 @@ describe('names, selection and bodies', () => {
     expect(uniqueName('scope-db', new Set(['scope-db', 'scope-db-2']))).toBe('scope-db-3');
   });
 
-  it('keeps only offered paths, once, in the model’s order', () => {
-    expect(pickOffered(['b.ts', ' a.ts', 'evil/../x.ts', 'b.ts'], ['a.ts', 'b.ts'], 10)).toEqual(['b.ts', 'a.ts']);
+  it('keeps only offered paths, once, in the model’s order, two per folder', () => {
+    expect(pickOffered(['b.ts', ' a.ts', 'evil/../x.ts', 'b.ts'], ['a.ts', 'b.ts'], 10, 2)).toEqual(['b.ts', 'a.ts']);
+    const offered = ['db/a.ts', 'db/b.ts', 'db/c.ts', 'api/d.ts'];
+    expect(pickOffered(offered, offered, 10, 2)).toEqual(['db/a.ts', 'db/b.ts', 'api/d.ts']);
+    expect(pickOffered(offered, offered, 2, 2)).toEqual(['db/a.ts', 'db/b.ts']);
   });
 
   it('dedents and fences the example without breaking on backticks inside it', () => {

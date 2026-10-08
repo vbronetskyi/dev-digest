@@ -16,6 +16,7 @@ import {
   EXTRACTION_SCHEMA_NAME,
   EXTRACTION_SYSTEM,
   MAX_FILE_CHARS,
+  MAX_FILES_PER_FOLDER,
   MAX_SELECTED_FILES,
   MAX_TOTAL_CHARS,
   OPENROUTER_FALLBACK_MODEL,
@@ -43,6 +44,7 @@ const Extraction = z.object({
       rule: z.string(),
       evidence_path: z.string(),
       evidence_snippet: z.string(),
+      also_seen_in: z.array(z.string()),
       confidence: z.number(),
     }),
   ),
@@ -99,9 +101,9 @@ export class ConventionsService {
       CALL_DEADLINE_MS,
       'Choosing files',
     );
-    let chosen = pickOffered(selection.data.files, candidates, MAX_SELECTED_FILES);
+    let chosen = pickOffered(selection.data.files, candidates, MAX_SELECTED_FILES, MAX_FILES_PER_FOLDER);
     // A model that picks nothing usable still gets a fair sample: the most central files.
-    if (chosen.length === 0) chosen = candidates.slice(0, MAX_SELECTED_FILES);
+    if (chosen.length === 0) chosen = pickOffered(candidates, candidates, MAX_SELECTED_FILES, MAX_FILES_PER_FOLDER);
 
     const files = await this.readFiles({ owner: repo.owner, name: repo.name }, chosen);
     if (files.size === 0) {

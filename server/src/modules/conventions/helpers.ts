@@ -1,19 +1,21 @@
 import type { ChatMessage, ConventionCandidate } from '@devdigest/shared';
 import type { ConventionRow } from '../../db/rows.js';
-import { MAX_CONVENTIONS, MIN_SNIPPET_CHARS } from './constants.js';
+import { CONFIDENCE_CAP_BY_FILES, MAX_CONVENTIONS, MIN_SNIPPET_CHARS } from './constants.js';
 
 /** What the model returns per convention in step 2 (before grounding). */
 export interface RawConvention {
   rule: string;
   evidence_path: string;
   evidence_snippet: string;
+  /** Other sampled files said to show the same convention. */
+  also_seen_in?: string[];
   confidence: number;
 }
 
 /** A convention whose snippet was found in the cited file. */
 export interface GroundedConvention {
   rule: string;
-  /** `path:start-end`, 1-based and inclusive. */
+  /** `path:start-end` (or `path:line` for one line), 1-based and inclusive. */
   evidencePath: string;
   /** The file's own lines for that range, dedented — never the model's copy. */
   evidenceSnippet: string;
@@ -59,9 +61,19 @@ export function dedent(lines: string[]): string {
 }
 
 /**
+ * Ceiling for a convention's confidence: how many sampled files show it. Paths
+ * the model was not shown do not count.
+ */
+export function confidenceCap(citedPath: string, alsoSeenIn: readonly string[] | undefined, files: ReadonlyMap<string, string>): number {
+  const support = new Set([citedPath, ...(alsoSeenIn ?? []).map((p) => p.trim()).filter((p) => files.has(p))]).size;
+  return CONFIDENCE_CAP_BY_FILES[Math.min(support, CONFIDENCE_CAP_BY_FILES.length - 1)]!;
+}
+
+/**
  * Keep only conventions that cite a file the model was shown and quote it for
  * real; re-read the quoted range from the file itself. Duplicates by rule are
- * dropped, confidence is clamped to 0..1, the list is capped and sorted.
+ * dropped, confidence is clamped to the ceiling from `confidenceCap`, the list
+ * is capped and sorted.
  */
 export function groundConventions(
   raw: RawConvention[],
@@ -83,19 +95,36 @@ export function groundConventions(
     const lines = content!.split(/\r?\n/).slice(at.start - 1, at.end);
     kept.push({
       rule,
-      evidencePath: `${path}:${at.start}-${at.end}`,
+      evidencePath: at.start === at.end ? `${path}:${at.start}` : `${path}:${at.start}-${at.end}`,
       evidenceSnippet: dedent(lines),
-      confidence: Number.isFinite(c.confidence) ? Math.min(1, Math.max(0, c.confidence)) : 0,
+      confidence: Number.isFinite(c.confidence)
+        ? Math.min(confidenceCap(path, c.also_seen_in, files), Math.max(0, c.confidence))
+        : 0,
     });
   }
   kept.sort((a, b) => b.confidence - a.confidence);
   return { kept: kept.slice(0, MAX_CONVENTIONS), dropped: dropped + Math.max(0, kept.length - MAX_CONVENTIONS) };
 }
 
-/** Only paths from the offered list survive, in the model's order, without repeats. */
-export function pickOffered(selected: string[], offered: readonly string[], max: number): string[] {
+const folderOf = (path: string) => path.slice(0, Math.max(0, path.lastIndexOf('/')));
+
+/**
+ * Only paths from the offered list survive, in the given order, without repeats
+ * and with at most `perFolder` from any one folder.
+ */
+export function pickOffered(selected: readonly string[], offered: readonly string[], max: number, perFolder: number): string[] {
   const allowed = new Set(offered);
-  return [...new Set(selected.map((p) => p.trim()))].filter((p) => allowed.has(p)).slice(0, max);
+  const perDir = new Map<string, number>();
+  const out: string[] = [];
+  for (const path of new Set(selected.map((p) => p.trim()))) {
+    if (!allowed.has(path)) continue;
+    const dir = folderOf(path);
+    if ((perDir.get(dir) ?? 0) >= perFolder) continue;
+    perDir.set(dir, (perDir.get(dir) ?? 0) + 1);
+    out.push(path);
+    if (out.length >= max) break;
+  }
+  return out;
 }
 
 export function buildSelectionMessages(repoName: string, candidates: readonly string[], system: string): ChatMessage[] {

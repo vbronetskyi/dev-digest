@@ -7,6 +7,13 @@ export const MAX_SELECTED_FILES = 10;
 /** Per-file and total character budgets for step 2 (≈ 4 chars per token). */
 export const MAX_FILE_CHARS = 8_000;
 export const MAX_TOTAL_CHARS = 60_000;
+/** At most this many picked files from one folder, so one layer cannot fill the sample. */
+export const MAX_FILES_PER_FOLDER = 2;
+/**
+ * Confidence ceiling by how many sampled files show the convention (the cited
+ * one plus `also_seen_in`). The model's own number is never trusted above it.
+ */
+export const CONFIDENCE_CAP_BY_FILES: readonly number[] = [0, 0.6, 0.8, 1];
 /** Conventions kept per pass, strongest first. */
 export const MAX_CONVENTIONS = 8;
 /** A shorter snippet ("}", "return x;") proves nothing about where it came from. */
@@ -42,8 +49,10 @@ export const EXTRACTION_SYSTEM = [
   '- evidence_path: one of the provided file paths, exactly as given.',
   '- evidence_snippet: 1 to 8 consecutive lines copied verbatim from that file that show the',
   '  convention. Do not paraphrase, shorten or merge lines.',
-  '- confidence: 0 to 1 — how sure you are this is a repo-wide rule and not a one-off. A',
-  '  pattern seen in a single file gets at most 0.6.',
+  '- also_seen_in: before answering, check every other provided file and list each one',
+  '  where the same convention appears. Empty when it shows up in one file only — a rule',
+  '  seen in several files is far more useful, so prefer those.',
+  '- confidence: 0 to 1 — how sure you are this is a repo-wide rule and not a one-off.',
   '',
   `Return at most ${MAX_CONVENTIONS} conventions, strongest first. If the files show no real`,
   'conventions, return an empty list.',
