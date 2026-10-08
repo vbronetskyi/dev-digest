@@ -10,3 +10,4 @@ binary images never enter the code history or a PR diff.
 - `lab-2/` — Skills Lab: skill editor tabs, file and URL import, agent Skills tab, conventions extractor,
   skill versions in the trace drawer (PR #6)
 - `lab-4/` — devdigest-mcp in MCP Inspector: the five tools, list_agents result (PR #7)
+- `hw-4/` — blast radius card: tree and graph on PR #5, a route file on PR #3 (PR #8)
