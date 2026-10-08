@@ -15,12 +15,33 @@
       "body": "Scan the repo to surface house-rules — naming, error handling, structure — each backed by evidence you can turn into a Skill.",
       "cta": "Run extraction"
     },
-    "candidateCount": "{count, plural, one {# candidate} other {# candidates}} · grounded against sampled files"
+    "candidateCount": "{count, plural, one {# candidate} other {# candidates}} · grounded against sampled files",
+    "acceptAll": "Accept all ({count})",
+    "rejectAll": "Reject all",
+    "rejectAllConfirm": "Reject {count, plural, one {# pending candidate} other {all # pending candidates}}?",
+    "scanSummary": "Read {files, plural, one {# file} other {# files}} with {model} · {dropped, plural, =0 {every quote found} one {# dropped: quote not found in the file} other {# dropped: quotes not found in the files}} · {cost}",
+    "costHint": "Each scan makes two model calls.",
+    "accepted": "Saved as skill \"{name}\"",
+    "noRepo": {
+      "title": "No repository selected",
+      "body": "Add or pick a repository to scan its conventions."
+    }
   },
   "card": {
     "confidence": "Confidence",
     "accepted": "Accepted",
     "accepting": "Accepting…",
-    "acceptAsSkill": "Accept as Skill"
+    "acceptAsSkill": "Accept as Skill",
+    "editFirst": "Edit first",
+    "reject": "Reject",
+    "cancel": "Cancel",
+    "rule": "Rule",
+    "name": "Skill name",
+    "namePlaceholder": "Derived from the rule",
+    "nameHint": "Lowercase words joined by hyphens. Leave empty to derive it from the rule.",
+    "openSkill": "Open skill",
+    "openFile": "Open {path} on GitHub",
+    "copy": "Copy snippet",
+    "copied": "Snippet copied"
   }
 }
