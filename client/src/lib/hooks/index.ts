@@ -12,3 +12,4 @@ export * from "./blast";
 export * from "./intent";
 export * from "./smart-diff";
 export * from "./context";
+export * from "./onboarding";
