@@ -1,5 +1,7 @@
 # DevDigest — starter
 
+> Мої лабораторні та домашні завдання курсу — у [`docs/labs/`](docs/labs/README.md).
+
 Local-first AI pull-request review. This is the **course starter template**: a
 minimal-but-working tool that does exactly one thing end to end — **import a PR
 and run an agent review on it**. Every later course lesson adds one feature back
