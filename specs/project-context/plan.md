@@ -49,7 +49,7 @@ skill-level context, reading from the PR head.
 | AC-2 | T1 | git-list-files "symlinks" | 21b3f33 |
 | AC-3 | T4 | context.it "no clone" | e650b8a |
 | AC-4 | T4 | context.it "only listed paths" | e650b8a |
-| AC-5 | T4 | context.it "256 KB" | e650b8a |
+| AC-5 | T4 | context.it "256 KB" | e650b8a, 2f30c79 |
 | AC-6 | T3 | context.it "order, dedupe" | df4b382 |
 | AC-7 | T3 | context.it "422" | df4b382 |
 | AC-8 | T5 | context.it "review reads attached docs" | 6919473, 3c379df, 34876bc |
@@ -57,13 +57,13 @@ skill-level context, reading from the PR head.
 | AC-10 | T2 | project-context-helpers "cut" | d355f1a |
 | AC-11 | T2, T5 | project-context-helpers "skip", context.it log | d355f1a, 6919473 |
 | AC-12 | T5 | context.it "map-reduce" | 6919473 |
-| AC-13 | T5 | context.it trace (done + failed) | 6919473 |
+| AC-13 | T5 | context.it trace (done + failed) | 6919473, 2f30c79 |
 | AC-14 | T5 | context.it assembly + commit log | 6919473 |
 | AC-15 | T6 | prompt.test | ba6d561 |
-| AC-16 | T1, T5 | git-list-files "commit, not worktree", context.it | 21b3f33, 6919473 |
+| AC-16 | T1, T5 | git-list-files "commit, not worktree", context.it | 21b3f33, 6919473, 2f30c79 |
 | AC-17 | T5, T6 | prompt.test, context.it "no context" | ba6d561, 6919473 |
 | AC-18 | T7 | DocList.test "AC-18" | c868a6d |
-| AC-19 | T7 | ContextDocView.test "AC-19", DocPanel.test "AC-19" | c868a6d, 3bf3677 |
+| AC-19 | T7 | ContextDocView.test "AC-19", DocPanel.test "AC-19" | c868a6d, 3bf3677, 2f30c79 |
 | AC-20 | T8 | ContextTab.test | 1d20a06, 781903c |
 | AC-21 | T8 | ContextTab.test "soft cap" | 1d20a06 |
 | AC-22 | T8 | ContextTab.test "missing" | 1d20a06 |
