@@ -97,4 +97,4 @@ Run in the package you changed. There is no linter — `typecheck` is the static
 ## Session protocol
 
 Before starting, read `insights/INSIGHTS.md` of every touched package and say which
-entries apply. When done, run the `engineering-insights` skill — never skip it.
+entries apply. When done, run `engineering-insights`; a Stop hook enforces it.
