@@ -41,10 +41,78 @@ export const OnboardingSection = z.object({
 });
 export type OnboardingSection = z.infer<typeof OnboardingSection>;
 
+/** How a tour was written (L05): by the model from facts, or a facts-only skeleton. */
+export const OnboardingMeta = z.object({
+  source: z.enum(['model', 'skeleton']),
+  /** Why it is a skeleton (model failed, no key…); null for a model-written tour. */
+  reason: z.string().nullish(),
+  model: z.string().nullish(),
+  /** USD the one model call cost; null when no call was made or none was reported. */
+  cost_usd: z.number().nullish(),
+  generated_at: z.string(),
+  /** Index commit the facts describe; file links point at it. */
+  indexed_sha: z.string().nullish(),
+  files_total: z.number().int().nullish(),
+});
+export type OnboardingMeta = z.infer<typeof OnboardingMeta>;
+
 export const Onboarding = z.object({
   sections: z.array(OnboardingSection),
+  meta: OnboardingMeta.nullish(),
 });
 export type Onboarding = z.infer<typeof Onboarding>;
+
+// ---- Project context (L05) ----
+/** Folder kind a context document sits in — specs (to build), docs (known), insights (notes). */
+export const ContextFolder = z.enum(['specs', 'docs', 'insights']);
+export type ContextFolder = z.infer<typeof ContextFolder>;
+
+/** Max documents one agent can attach. */
+export const CONTEXT_MAX_PATHS = 20;
+/** The UI warns above this many tokens; the run budget itself is larger. */
+export const CONTEXT_SOFT_CAP_TOKENS = 4000;
+
+/** A document path an agent can attach: repo-relative Markdown, never `..`. */
+export const ContextPath = z
+  .string()
+  .min(1)
+  .max(300)
+  .refine(
+    (p) => !p.startsWith('/') && !p.includes('\\') && !p.split('/').includes('..') && p.toLowerCase().endsWith('.md'),
+    { message: 'must be a repo-relative .md path without ".."' },
+  );
+
+export const ContextDoc = z.object({
+  path: z.string(),
+  folder: ContextFolder,
+  name: z.string(),
+  bytes: z.number().int(),
+  /** ≈ bytes / 4. */
+  tokens: z.number().int(),
+  /** Agents in the workspace that attach this path. */
+  used_by: z.number().int(),
+});
+export type ContextDoc = z.infer<typeof ContextDoc>;
+
+export const ContextDocList = z.object({
+  docs: z.array(ContextDoc),
+  /** Set when the list is empty for a reason other than "no documents". */
+  reason: z.enum(['no_clone']).nullish(),
+});
+export type ContextDocList = z.infer<typeof ContextDocList>;
+
+export const ContextDocBody = z.object({
+  path: z.string(),
+  folder: ContextFolder,
+  body: z.string(),
+});
+export type ContextDocBody = z.infer<typeof ContextDocBody>;
+
+/** An agent's attached documents, in prompt order. */
+export const AgentContext = z.object({
+  paths: z.array(ContextPath).max(CONTEXT_MAX_PATHS),
+});
+export type AgentContext = z.infer<typeof AgentContext>;
 
 // ---- Eval ----
 export const EvalPerTrace = z.object({
