@@ -26,8 +26,9 @@ export function isTextInput(el: EventTarget | null): boolean {
 export function activeKeyFor(pathname: string): string {
   if (pathname.startsWith("/settings")) return "settings";
   if (pathname.includes("/multi-agent")) return "multi-agent";
-  if (pathname.includes("/onboarding")) return "onboarding-tour";
-  if (pathname.includes("/context")) return "context";
+  // Repo-scoped only: `/onboarding` on its own is the "add a repository" page.
+  if (/^\/repos\/[^/]+\/onboarding/.test(pathname)) return "onboarding-tour";
+  if (/^\/repos\/[^/]+\/context/.test(pathname)) return "context";
   if (pathname.includes("/conventions")) return "conventions";
   if (pathname.includes("/pulls")) return "pulls";
   if (pathname.startsWith("/skills")) return "skills";
