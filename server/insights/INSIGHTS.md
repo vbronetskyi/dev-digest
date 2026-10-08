@@ -12,6 +12,14 @@ gave $0.000514 — 3.3× off. The engine already returns the billed `costUsd`;
 persist that number at completion and treat it as the only source of truth.
 Evidence: `src/modules/reviews/run-executor.ts:214`, `../reviewer-core/src/llm/openrouter.ts:98`
 
+### 2026-10-08 — Smart diff: classify by reason, derive the role from it
+Each file gets the rule that matched (`lockfile`, `entrypoint`, `imports_only`…)
+and the role follows from that. The UI shows the reason, which is what makes the
+grouping believable. Rule order matters: mechanical path rules run before the
+"no line changes → rename" check, so a binary asset (0/0) stays an asset; tests
+come before docs and config, so `test/fixtures/x.json` stays a test.
+Evidence: `src/modules/smart-diff/helpers.ts:83`, `src/modules/smart-diff/constants.ts:44`
+
 ## What Doesn't Work
 
 ### 2026-10-08 — The seeded General Reviewer speculates beyond the diff
@@ -82,6 +90,14 @@ run's `cost_usd`, because one derivation serves every agent and later runs on
 the same head. Tests that count model calls per run must skip `schemaName ===
 'PrIntent'`.
 Evidence: `src/modules/reviews/run-executor.ts:113`, `src/modules/reviews/intent.ts:138`
+
+### 2026-10-08 — Only the PR row knows which commit was last reviewed
+`reviews` and `agent_runs` store no head SHA. The one record is
+`pull_requests.last_reviewed_sha`, set by `markReviewed` on every run, and it is
+PR-wide: it cannot say which agent's review saw which commit. The smart diff
+uses it for `markers_stale` (head ≠ last reviewed) — enough to warn that finding
+lines may have shifted, not to re-anchor them.
+Evidence: `src/modules/reviews/repository/pull.repo.ts:54`, `src/modules/smart-diff/service.ts:25`
 
 ## Tool & Library Notes
 

@@ -117,6 +117,32 @@ describe('AI contracts parse fixtures', () => {
     expect(d.groups[0]!.role).toBe('core');
   });
 
+  it('SmartDiff as the API serves it (HW L03 fields)', () => {
+    const d = SmartDiff.parse({
+      groups: [
+        {
+          role: 'core',
+          files: [
+            {
+              path: 'a.ts',
+              pseudocode_summary: null,
+              additions: 84,
+              deletions: 0,
+              finding_lines: [28],
+              reason: 'source',
+              findings: [{ id: 'f1', start_line: 28, end_line: 30, severity: 'CRITICAL', title: 'SSRF' }],
+            },
+          ],
+        },
+      ],
+      split_suggestion: { too_big: false, total_lines: 285, reviewable_lines: 120, proposed_splits: [] },
+      reviews_used: 1,
+      markers_stale: false,
+    });
+    expect(d.groups[0]!.files[0]!.findings![0]!.severity).toBe('CRITICAL');
+    expect(() => SmartDiff.parse({ ...d, reviews_used: 1.5 })).toThrow();
+  });
+
   it('Conformance / Onboarding / EvalRun / MemoryItem', () => {
     expect(() =>
       Conformance.parse({

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { Severity } from './findings.js';
 
 /**
  * PR Brief building blocks: Intent, Blast radius, Risks, PR History,
@@ -91,12 +92,46 @@ export type PrHistory = z.infer<typeof PrHistory>;
 export const SmartDiffRole = z.enum(['core', 'wiring', 'boilerplate']);
 export type SmartDiffRole = z.infer<typeof SmartDiffRole>;
 
+/** Why a file got its role — the rule that matched, so the UI can say it. */
+export const SmartDiffReason = z.enum([
+  'source',
+  'entrypoint',
+  'imports_only',
+  'config',
+  'migration',
+  'infra',
+  'lockfile',
+  'generated',
+  'test',
+  'docs',
+  'i18n',
+  'assets',
+  'styles',
+  'tooling',
+  'rename',
+]);
+export type SmartDiffReason = z.infer<typeof SmartDiffReason>;
+
+/** A finding from the latest reviews, anchored to new-side lines of the file. */
+export const SmartDiffFinding = z.object({
+  id: z.string(),
+  start_line: z.number().int(),
+  end_line: z.number().int(),
+  severity: Severity,
+  title: z.string(),
+});
+export type SmartDiffFinding = z.infer<typeof SmartDiffFinding>;
+
 export const SmartDiffFile = z.object({
   path: z.string(),
   pseudocode_summary: z.string().nullish(),
   additions: z.number().int(),
   deletions: z.number().int(),
   finding_lines: z.array(z.number().int()),
+  /** Rule that set the role; always present in API responses. */
+  reason: SmartDiffReason.nullish(),
+  /** Open findings from the latest reviews; always present in API responses. */
+  findings: z.array(SmartDiffFinding).nullish(),
 });
 export type SmartDiffFile = z.infer<typeof SmartDiffFile>;
 
@@ -117,8 +152,14 @@ export const SmartDiff = z.object({
   split_suggestion: z.object({
     too_big: z.boolean(),
     total_lines: z.number().int(),
+    /** Changed lines in core and wiring files — what the size verdict counts. */
+    reviewable_lines: z.number().int().nullish(),
     proposed_splits: z.array(ProposedSplit),
   }),
+  /** Reviews the finding markers come from (latest per agent); 0 = not reviewed yet. */
+  reviews_used: z.number().int().nullish(),
+  /** The head moved since the last review: markers may point at shifted lines. */
+  markers_stale: z.boolean().nullish(),
 });
 export type SmartDiff = z.infer<typeof SmartDiff>;
 
