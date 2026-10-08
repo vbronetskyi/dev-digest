@@ -1,0 +1,51 @@
+import type { CSSProperties } from "react";
+
+/** Co-located styles for the agent's Skills tab. */
+export const s = {
+  wrap: { maxWidth: 760 } satisfies CSSProperties,
+  header: { display: "flex", alignItems: "center", gap: 12, marginBottom: 6 } satisfies CSSProperties,
+  h2: { fontSize: 18, fontWeight: 700 } satisfies CSSProperties,
+  hint: { fontSize: 12.5, color: "var(--text-muted)", marginBottom: 20, lineHeight: 1.5 } satisfies CSSProperties,
+  section: {
+    fontSize: 11,
+    fontWeight: 700,
+    letterSpacing: 0.6,
+    textTransform: "uppercase",
+    color: "var(--text-muted)",
+    margin: "0 0 8px",
+  } satisfies CSSProperties,
+  list: { display: "flex", flexDirection: "column", gap: 6, marginBottom: 24, padding: 0, listStyle: "none" } satisfies CSSProperties,
+  row: (dragOver: boolean, dimmed: boolean): CSSProperties => ({
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    padding: "8px 10px",
+    borderRadius: 8,
+    border: `1px solid ${dragOver ? "var(--accent)" : "var(--border)"}`,
+    background: "var(--bg-elevated)",
+    opacity: dimmed ? 0.5 : 1,
+  }),
+  handle: { color: "var(--text-muted)", cursor: "grab", display: "grid", placeItems: "center" } satisfies CSSProperties,
+  order: { width: 18, fontSize: 12, color: "var(--text-muted)", textAlign: "right" } satisfies CSSProperties,
+  name: { fontSize: 13, fontWeight: 600 } satisfies CSSProperties,
+  desc: {
+    flex: 1,
+    minWidth: 0,
+    fontSize: 12,
+    color: "var(--text-muted)",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  } satisfies CSSProperties,
+  chip: (c: string, bg: string): CSSProperties => ({
+    fontSize: 10.5,
+    fontWeight: 600,
+    padding: "2px 8px",
+    borderRadius: 5,
+    color: c,
+    background: bg,
+  }),
+  arrows: { display: "flex", gap: 2 } satisfies CSSProperties,
+  none: { fontSize: 12.5, color: "var(--text-muted)", padding: "10px 2px", marginBottom: 24 } satisfies CSSProperties,
+  filter: { marginBottom: 10 } satisfies CSSProperties,
+} as const;
