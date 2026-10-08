@@ -1,4 +1,10 @@
-/* Helpers shared by the editor's ordered tabs (Skills, Context). */
+/* Helpers for the agent editor: the tab in the URL, and moving items in the ordered tabs. */
+import { TABS } from "./constants";
+
+/** The `?tab=` value if it names an editor tab, else Config. One list: TABS. */
+export function editorTab(param: string | null): string {
+  return TABS.some((tb) => tb.key === param) ? param! : "config";
+}
 
 /** Move one element; returns a new array. Out-of-range indexes return the input unchanged. */
 export function moveItem<T>(list: readonly T[], from: number, to: number): T[] {
