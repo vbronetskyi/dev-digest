@@ -4,10 +4,22 @@ import { parseUnifiedDiff } from '../../adapters/git/diff-parser.js';
 import * as schema from '../../db/schema.js';
 import type { ReviewRepository, PullRow } from './repository.js';
 
+/** Raised when no source yields a single changed file with a patch. */
+export class EmptyDiffError extends Error {
+  constructor() {
+    super('the PR has no changed files with a patch — nothing to review (empty, binary-only, or GitHub unreachable)');
+    this.name = 'EmptyDiffError';
+  }
+}
+
 /**
- * Load the unified diff for a PR. Prefers a real `git diff base...head`; falls
- * back to assembling a synthetic unified diff from the persisted pr_files
- * patches (so the reviewer works even before a clone completes / in tests).
+ * Load the unified diff for a PR, in order:
+ *   1. `git diff base...head` on the local clone;
+ *   2. the persisted pr_files patches (written when the PR page is opened);
+ *   3. the files from GitHub, persisted for next time — a review started over
+ *      the API or MCP never opened the PR page, so (2) can be empty.
+ * Nothing anywhere → EmptyDiffError, so the run fails instead of "approving" an
+ * empty diff with score 100.
  */
 export async function loadDiff(
   container: Container,
@@ -26,7 +38,19 @@ export async function loadDiff(
   } catch {
     /* fall through to pr_files reconstruction */
   }
-  return diffFromPrFiles(repo, pull.id);
+  const persisted = await diffFromPrFiles(repo, pull.id);
+  if (persisted.files.length > 0) return persisted;
+
+  try {
+    const gh = await container.github();
+    const detail = await gh.getPullRequest({ owner: repoRow.owner, name: repoRow.name }, pull.number);
+    await repo.replacePrFiles(pull.id, detail.files);
+    const fetched = await diffFromPrFiles(repo, pull.id);
+    if (fetched.files.length > 0) return fetched;
+  } catch {
+    /* no token / offline — nothing more to try */
+  }
+  throw new EmptyDiffError();
 }
 
 /** Reconstruct a UnifiedDiff from persisted pr_files patches. */

@@ -1,5 +1,5 @@
 import type { Container } from '../../platform/container.js';
-import type { FindingActionKind, RunEventKind, RunTrace } from '@devdigest/shared';
+import type { FindingActionKind, RunEventKind, RunResult, RunTrace } from '@devdigest/shared';
 import { AppError, NotFoundError } from '../../platform/errors.js';
 import type { AgentRow } from '../../db/rows.js';
 import { ReviewRepository } from './repository.js';
@@ -171,6 +171,27 @@ export class ReviewService {
     return rows.map(({ review, findings }) =>
       reviewToDto(review, findings, review.agentId ? names.get(review.agentId) : null),
     );
+  }
+
+  /**
+   * A run by id with its PR and review (null while running or after a failure).
+   * Wire shape is the `RunResult` contract; `review` is the same DTO
+   * `GET /pulls/:id/reviews` returns.
+   */
+  async runResult(
+    workspaceId: string,
+    runId: string,
+  ): Promise<Omit<RunResult, 'review'> & { review: ReviewDto | null }> {
+    const run = await this.repo.getRunWithPull(workspaceId, runId);
+    if (!run) throw new NotFoundError('Run not found');
+    const produced = await this.repo.reviewForRun(runId);
+    return {
+      run: run.summary,
+      pr_id: run.prId,
+      pr_number: run.prNumber,
+      repo: run.repo,
+      review: produced ? reviewToDto(produced.review, produced.findings, run.summary.agent_name) : null,
+    };
   }
 
   async getRunTrace(runId: string): Promise<RunTrace | undefined> {

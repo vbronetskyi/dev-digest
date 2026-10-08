@@ -129,6 +129,13 @@ reviewer-core insight on the SDK timeout). `withDeadline` returns a 502 after
 The retry a minute later took 18 s.
 Evidence: `src/modules/conventions/service.ts:54`, `src/modules/conventions/constants.ts:22`
 
+### 2026-10-08 — Empty-diff reviews are fixed (supersedes the 2026-10-07 open question)
+`loadDiff` now tries git → persisted pr_files → the PR files from GitHub (and
+persists them), and throws `EmptyDiffError` when none has a patch, so the run
+fails with a reason instead of approving nothing with score 100. This mattered
+once MCP started reviews over the API: nobody opens the PR page there.
+Evidence: `src/modules/reviews/diff-loader.ts:24`, `src/modules/reviews/diff-loader.ts:8`, `test/run-result.it.test.ts:1`
+
 ## Session Notes
 
 ### 2026-10-07 — Lab 1: run cost

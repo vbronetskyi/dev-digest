@@ -12,6 +12,7 @@ import { ReviewService } from './service.js';
  *   POST   /pulls/:id/review  {agentId} | {all:true}  → run review(s); returns runs
  *   GET    /runs/:id/events                            → SSE stream of RunEvent (replay-first)
  *   GET    /runs/:id/trace                             → the single-document RunTrace
+ *   GET    /runs/:id/review                            → run + PR + its review (MCP get_findings)
  *   GET    /pulls/:id/reviews                          → persisted reviews + findings for a PR
  *   POST   /findings/:id/(accept|dismiss)              → finding actions
  */
@@ -123,6 +124,12 @@ export default async function reviewsRoutes(appBase: FastifyInstance) {
     const trace = await service.getRunTrace(req.params.id);
     if (!trace) throw new NotFoundError('Run trace not found');
     return trace;
+  });
+
+  // ---- One run with its PR and review (MCP get_findings, deep links) ------
+  app.get('/runs/:id/review', { schema: { params: IdParams } }, async (req) => {
+    const { workspaceId } = await getContext(container, req);
+    return service.runResult(workspaceId, req.params.id);
   });
 
   // ---- Reads --------------------------------------------------------------

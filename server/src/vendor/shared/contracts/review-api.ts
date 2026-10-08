@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { Finding, Verdict } from './findings.js';
 import { Intent, SmartDiff } from './brief.js';
+import { RunSummary } from './trace.js';
 
 /**
  * A2 — Review-Core API surface contracts. These extend the core
@@ -36,6 +37,19 @@ export const ReviewRecord = z.object({
   findings: z.array(FindingRecord),
 });
 export type ReviewRecord = z.infer<typeof ReviewRecord>;
+
+/**
+ * One run looked up by its id (MCP `get_findings`, deep links): the run row, the
+ * PR it belongs to, and its review — null while running or when the run failed.
+ */
+export const RunResult = z.object({
+  run: RunSummary,
+  pr_id: z.string(),
+  pr_number: z.number().int(),
+  repo: z.string(),
+  review: ReviewRecord.nullable(),
+});
+export type RunResult = z.infer<typeof RunResult>;
 
 /**
  * Response of `POST /pulls/:id/review`. Each requested agent produces a run that

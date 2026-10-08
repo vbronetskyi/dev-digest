@@ -48,7 +48,11 @@ export async function listRunsForPull(
     .leftJoin(t.agents, eq(t.agents.id, t.agentRuns.agentId))
     .where(and(eq(t.agentRuns.workspaceId, workspaceId), eq(t.agentRuns.prId, prId)))
     .orderBy(desc(t.agentRuns.ranAt));
-  return rows.map(({ run, agentName }) => ({
+  return rows.map(({ run, agentName }) => toRunSummary(run, agentName));
+}
+
+function toRunSummary(run: typeof t.agentRuns.$inferSelect, agentName: string | null): RunSummary {
+  return {
     run_id: run.id,
     agent_id: run.agentId,
     agent_name: agentName ?? null,
@@ -65,7 +69,30 @@ export async function listRunsForPull(
     ran_at: run.ranAt ? run.ranAt.toISOString() : null,
     score: run.score,
     blockers: run.blockers,
-  }));
+  };
+}
+
+/** One run with the PR and repo it belongs to. Workspace-scoped. */
+export async function getRunWithPull(
+  db: Db,
+  workspaceId: string,
+  runId: string,
+): Promise<{ summary: RunSummary; prId: string; prNumber: number; repo: string } | undefined> {
+  const [row] = await db
+    .select({
+      run: t.agentRuns,
+      agentName: t.agents.name,
+      prId: t.pullRequests.id,
+      prNumber: t.pullRequests.number,
+      repo: t.repos.fullName,
+    })
+    .from(t.agentRuns)
+    .innerJoin(t.pullRequests, eq(t.pullRequests.id, t.agentRuns.prId))
+    .innerJoin(t.repos, eq(t.repos.id, t.pullRequests.repoId))
+    .leftJoin(t.agents, eq(t.agents.id, t.agentRuns.agentId))
+    .where(and(eq(t.agentRuns.workspaceId, workspaceId), eq(t.agentRuns.id, runId)));
+  if (!row) return undefined;
+  return { summary: toRunSummary(row.run, row.agentName), prId: row.prId, prNumber: row.prNumber, repo: row.repo };
 }
 
 /**

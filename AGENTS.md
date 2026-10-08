@@ -11,13 +11,12 @@ grounded findings with severity and score. Course starter — see README "What y
 | `client/` (`@devdigest/web`) | Studio UI on :3000 | Next.js 15 App Router, React 19, TanStack Query 5, next-intl, Tailwind 4 |
 | `reviewer-core/` | Pure review engine: diff → prompt → LLM → grounded findings | TypeScript, zod; the only I/O is an injected `LLMProvider` |
 | `e2e/` | Deterministic browser flows, no LLM | agent-browser CLI, `tsx` runner |
-
-TypeScript 5.7, ESM, Node ≥ 22. Tests are vitest everywhere except `e2e/`.
+| `mcp/` (`@devdigest/mcp`) | MCP server (stdio) that lets coding agents run reviews over the API | `@modelcontextprotocol/sdk`, zod, `tsx` |
 
 ## Layout
 
-Not a workspace. Four standalone packages, each with its own `package.json` and
-lockfile; cross-package code is reached through tsconfig path aliases.
+Not a workspace. Five standalone packages (TypeScript 5.7, ESM, Node ≥ 22), each with
+its own `package.json` and lockfile; cross-package code goes through tsconfig aliases.
 
 - `@devdigest/shared` — zod contracts. Lives in `server/src/vendor/shared`;
   `reviewer-core` imports that copy, **`client/` has its own copy** in
@@ -37,7 +36,7 @@ The server does **not** migrate on boot: `cd server && pnpm db:migrate`.
 
 ## Verify
 
-Run in the package you changed. No linter — `typecheck` and `depcruise` are the static gates.
+Run in the package you changed. Vitest everywhere but `e2e/`; no linter — these are the gates.
 
 | Package | Typecheck | Tests |
 |---|---|---|
@@ -45,6 +44,7 @@ Run in the package you changed. No linter — `typecheck` and `depcruise` are th
 | `client/` (pnpm) | `pnpm typecheck` | `pnpm test` |
 | `reviewer-core/` (npm) | `npm run typecheck` | `npm test` |
 | `e2e/` (npm) | `npm run typecheck` | `./scripts/e2e.sh` from the repo root (hermetic stack) |
+| `mcp/` (npm) | `npm run typecheck` | `npm test` (in-memory MCP client, fake API) |
 
 ## Naming conventions
 
@@ -68,8 +68,8 @@ Run in the package you changed. No linter — `typecheck` and `depcruise` are th
 - **`server/src/db/migrations/**`** — never edit, rename, reorder or delete a migration or
   `meta/`: every environment already ran them, so edits make databases drift silently.
   Schema change: edit `src/db/schema/*.ts` → `pnpm db:generate` → `pnpm db:migrate`.
-- **Lockfiles** — `server/pnpm-lock.yaml`, `client/pnpm-lock.yaml`,
-  `reviewer-core/package-lock.json`, `e2e/package-lock.json`, `skills-lock.json`.
+- **Lockfiles** — `server/pnpm-lock.yaml`, `client/pnpm-lock.yaml`, `skills-lock.json`,
+  `reviewer-core/package-lock.json`, `e2e/package-lock.json`, `mcp/package-lock.json`.
   Never hand-edit or regenerate them. Dependencies change only through the
   package's own manager (`pnpm add` / `npm install <pkg>`) and only when the task
   needs it. Never run `pnpm install` in an npm package or vice versa.

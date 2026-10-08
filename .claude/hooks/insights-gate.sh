@@ -13,7 +13,7 @@ git cat-file -e "${base:-HEAD}^{commit}" 2>/dev/null || base=HEAD
 changed=$( { git diff --name-only "${base:-HEAD}"; git ls-files --others --exclude-standard; } 2>/dev/null | sort -u)
 
 missing=""
-for pkg in server client reviewer-core e2e; do
+for pkg in server client reviewer-core e2e mcp; do
   # Code only: notes, docs and specs alone do not call for an insight.
   printf '%s\n' "$changed" | grep "^$pkg/" | grep -qvE "^$pkg/(insights|docs|specs)/|\.md$" || continue
   printf '%s\n' "$changed" | grep -qx "$pkg/insights/INSIGHTS.md" || missing="$missing${missing:+, }$pkg"

@@ -39,6 +39,13 @@ export class ReviewRepository {
     return pullRepo.getPrFiles(this.db, prId);
   }
 
+  replacePrFiles(
+    prId: string,
+    files: { path: string; additions: number; deletions: number; patch?: string | null }[],
+  ): Promise<void> {
+    return pullRepo.replacePrFiles(this.db, prId, files);
+  }
+
   // ---- reviews + findings -------------------------------------------------
 
   insertReview(values: {
@@ -68,6 +75,10 @@ export class ReviewRepository {
     return reviewRepo.getReview(this.db, reviewId);
   }
 
+  reviewForRun(runId: string): Promise<{ review: ReviewRow; findings: FindingRow[] } | undefined> {
+    return reviewRepo.reviewForRun(this.db, runId);
+  }
+
   /** In-flight runs for a PR (status='running') — the server-side source of
    *  truth for "which agents are running now". Joined with the agent name. */
   activeRunsForPull(
@@ -80,6 +91,10 @@ export class ReviewRepository {
   /** All runs for a PR (any status), newest first — the PR run history. */
   listRunsForPull(workspaceId: string, prId: string): Promise<RunSummary[]> {
     return runRepo.listRunsForPull(this.db, workspaceId, prId);
+  }
+
+  getRunWithPull(workspaceId: string, runId: string) {
+    return runRepo.getRunWithPull(this.db, workspaceId, runId);
   }
 
   /** Delete one agent run (+ its trace via FK cascade). Workspace-scoped. */
