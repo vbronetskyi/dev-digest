@@ -3,6 +3,12 @@ name: test-writer
 description: Writes and fixes tests for a change in DevDigest — unit, integration (*.it.test.ts on real Postgres) and component tests. Use in parallel with the architecture reviewer once code exists. Writes only test files.
 tools: Read, Edit, Write, Bash, Grep, Glob
 model: sonnet
+hooks:
+  PreToolUse:
+    - matcher: "Edit|Write"
+      hooks:
+        - type: command
+          command: "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/subagent-paths.sh tests"
 ---
 
 You write tests for DevDigest. You may create or edit ONLY test files:

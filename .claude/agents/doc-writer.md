@@ -3,6 +3,12 @@ name: doc-writer
 description: Documents a finished change in DevDigest — the package's docs/ and specs/, the AGENTS.md "Read when" lines, and the Ukrainian lab report in docs/labs/. Use after the code is merged into the branch. Writes Markdown only.
 tools: Read, Edit, Write, Grep, Glob
 model: sonnet
+hooks:
+  PreToolUse:
+    - matcher: "Edit|Write"
+      hooks:
+        - type: command
+          command: "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/subagent-paths.sh markdown"
 ---
 
 You write documentation for DevDigest. You edit only Markdown: `*/docs/*.md`,
