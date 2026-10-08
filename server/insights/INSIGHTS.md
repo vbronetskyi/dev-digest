@@ -65,6 +65,13 @@ therefore keep a run at "Reviewing all files in one pass" for ~13 minutes with
 no new log line. Seen on a repeat General Reviewer run of PR #1.
 Evidence: `../reviewer-core/src/llm/openrouter.ts:54`, `src/modules/reviews/run-executor.ts:191`
 
+### 2026-10-08 — `pnpm typecheck` does not look at tests, and vitest does not type-check
+`tsconfig.json` includes only `src/**/*.ts`, and vitest strips types. After
+`PromptParts.skills` changed shape, the old `skills: ['…']` calls in
+`test/prompt-*.test.ts` compiled "fine" and only failed as wrong runtime output.
+After a contract change, grep the tests for the old shape yourself.
+Evidence: `tsconfig.json:28`, `test/prompt-structured.test.ts:17`
+
 ## Recurring Errors & Fixes
 
 ### 2026-10-08 — A stalled model call hangs a run indefinitely (supersedes "~13 minutes")
@@ -90,6 +97,15 @@ hang is bounded only by the OS TCP timeout (~15 min here). It recurred on a
 second run the same morning, so it is not a one-off.
 Evidence: `src/modules/reviews/run-executor.ts:301`, `../reviewer-core/src/llm/openrouter.ts:69`
 
+### 2026-10-08 — An orphaned dev server keeps serving old code on :3001
+`scripts/dev.sh` kills only the subshell PID on exit, so the `pnpm dev` →
+`tsx watch` tree under it survives (parent becomes PID 1) when the script is
+killed. The next stack's watcher then dies on every reload with
+`EADDRINUSE 0.0.0.0:3001` while the orphan answers requests with stale code.
+If the API ignores your change: `lsof -nP -iTCP:3001 -sTCP:LISTEN`, check the
+listener's parent chain, kill the orphaned tree, touch `src/server.ts`.
+Evidence: `../scripts/dev.sh:100`, `../scripts/dev.sh:105`
+
 ## Session Notes
 
 ### 2026-10-07 — Lab 1: run cost
@@ -108,6 +124,19 @@ Reviewed the three demo PRs with all agents: SSRF (#3) found by all three; N+1
 false CRITICAL from General. Integration test covers null → counts → latest-only.
 Evidence: `src/modules/pulls/routes.ts:134`, `test/reviews.it.test.ts:273`
 
+### 2026-10-08 — Lab 2: skills library and skills in runs
+Skills CRUD with body versioning, SSRF-safe URL import (preview first, imported
+skills land disabled), transactional workspace-scoped agent linking, enabled
+linked skills passed to the engine in link order, `config.skills` with versions
+in the trace, usage stats from the trace, four seeded skills.
+A/B on demo PR #2, Performance Reviewer (deepseek-v4-flash), 3 runs each with
+`query-efficiency` + `null-not-zero` linked and without: with skills 1/3 found
+the N+1, without 0/3. But in 4 of the 6 runs the model said the diff was absent
+although the stored prompt has it — so the sample says little about the skill.
+This supersedes the Homework 1 note that Performance "missed" the N+1: its L1
+run also claimed there was no diff.
+Evidence: `src/modules/reviews/run-executor.ts:190`, `src/db/seed-skills.ts:41`
+
 ## Open Questions
 
 ### 2026-10-07 — A review can run on an empty diff and approve with score 100
@@ -125,4 +154,13 @@ After a cancel, the in-flight call keeps going. If it ever returns, `runOneAgent
 persists the review and calls `completeAgentRun` with `status: 'done'`
 unconditionally, which would overwrite `cancelled`. Not reproduced yet.
 Evidence: `src/modules/reviews/run-executor.ts:244`
+
+### 2026-10-08 — Performance Reviewer often claims the diff is missing
+On PR #2 the Performance Reviewer (deepseek-v4-flash, single-pass) answered "the
+diff is not present" / "no diff content was provided" in 4 of 6 runs, with and
+without skills. The stored `prompt_assembly.user` of those runs is identical to
+the run that found the N+1 (10 420 chars, `## Diff to review` with the full
+hunk). General and Security on the same model read the same diff fine. Next
+step: rerun the agent on another model, then bisect its system prompt.
+Evidence: `src/modules/reviews/run-executor.ts:285`, `../docs/agent-prompts/performance-reviewer.md:1`
 

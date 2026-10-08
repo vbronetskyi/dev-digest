@@ -28,6 +28,13 @@ into `document.body` with fixed positioning; its scroll-close listener ignores
 scroll events from inside the popover, or scrolling its own list would close it.
 Evidence: `src/app/repos/[repoId]/pulls/styles.ts:90`, `src/app/repos/[repoId]/pulls/_components/FindingsCell/FindingsCell.tsx:45`
 
+### 2026-10-08 — The skill prompt block is duplicated on purpose
+The Preview tab shows the exact `<skill name="…">` block the reviewer gets.
+`promptBlock` re-implements `wrapSkill` from reviewer-core because the client
+cannot import reviewer-core. Changing the escaping or the name rule in one place
+without the other makes the preview lie.
+Evidence: `src/app/skills/helpers.ts:18`, `../reviewer-core/src/prompt.ts:46`
+
 ## Tool & Library Notes
 
 ### 2026-10-07 — `messages/en/runs.json` is not uniformly indented
@@ -46,6 +53,15 @@ Evidence: `src/lib/hooks/reviews.ts:33`, `src/lib/hooks/reviews.ts:181`
 `<SeverityBadge count={2} />` renders "CRITICAL 2". For the "2 CRITICAL" format
 use `SeverityPill` from `src/components/severity`.
 Evidence: `src/vendor/ui/primitives/Badge.tsx:80`
+
+### 2026-10-08 — Runtime zod schemas: import the contract file, not the barrel
+`import { SkillInput } from "@devdigest/shared"` passes `pnpm typecheck` and
+vitest, then `next dev` answers 500 on the page: a value import pulls
+`vendor/shared/index.ts` into webpack, and its `./contracts/*.js` re-exports do
+not resolve. Import the schema from `@/vendor/shared/contracts/<file>` instead —
+it works as long as that file imports nothing but `zod`. Types can still come
+from the barrel.
+Evidence: `src/app/skills/_components/SkillConfigForm/SkillConfigForm.tsx:11`, `src/lib/feature-models.ts:6`
 
 ## Recurring Errors & Fixes
 
@@ -69,5 +85,13 @@ FINDINGS column with a read-only hover preview in the PR list. Verified with a
 scripted browser on live reviews of demo PR #3: pills 1/1/2, Critical filter
 leaves the single SSRF card, preview shows 4 findings and no buttons.
 Evidence: `src/lib/findings.ts:13`, `src/app/repos/[repoId]/pulls/_components/FindingsCell/FindingsCell.tsx:17`
+
+### 2026-10-08 — Lab 2: Skills Lab
+`/skills` (library, editor with Config / Preview / Stats / Versions, URL import
+drawer), Skills tab in the agent editor (link, reorder by drag or arrows), and
+`name@vN` per skill in the trace drawer's Configuration. Checked in a scripted
+browser against the live API: link two skills, import a SKILL.md from GitHub
+(lands disabled, "needs vetting"), edit a body → v2 with a one-line diff.
+Evidence: `src/app/skills/page.tsx:20`, `src/app/agents/[id]/_components/AgentEditor/_components/SkillsTab/SkillsTab.tsx:20`
 
 ## Open Questions
