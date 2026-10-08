@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import {
   FEATURE_MODELS,
   FeatureModelChoice,
@@ -6,7 +6,6 @@ import {
 } from '@devdigest/shared';
 import type { Container } from '../../platform/container.js';
 import * as t from '../../db/schema.js';
-import { rowsToSettings } from './helpers.js';
 
 /**
  * Per-feature model configuration.
@@ -38,11 +37,13 @@ export async function getFeatureModelOverride(
   workspaceId: string,
   id: FeatureModelId,
 ): Promise<FeatureModelChoice | undefined> {
+  // Same precedence as GET /settings, which folds every row of the workspace into
+  // one object: the last row for a key wins.
   const rows = await container.db
-    .select({ key: t.settings.key, value: t.settings.value })
+    .select({ value: t.settings.value })
     .from(t.settings)
-    .where(eq(t.settings.workspaceId, workspaceId));
-  const fm = (rowsToSettings(rows) as { feature_models?: Record<string, unknown> }).feature_models;
+    .where(and(eq(t.settings.workspaceId, workspaceId), eq(t.settings.key, 'feature_models')));
+  const fm = rows.at(-1)?.value as Record<string, unknown> | null | undefined;
   const parsed = FeatureModelChoice.safeParse(fm?.[id]);
   return parsed.success ? parsed.data : undefined;
 }

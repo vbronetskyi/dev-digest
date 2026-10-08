@@ -216,6 +216,34 @@ export const ConventionCandidate = z.object({
 });
 export type ConventionCandidate = z.infer<typeof ConventionCandidate>;
 
+/** Result of one extraction pass over a repo. */
+export const ConventionExtraction = z.object({
+  /** Every candidate stored for the repo after the pass: new ones plus earlier accepted ones. */
+  candidates: z.array(ConventionCandidate),
+  /** Files the model actually read. */
+  sampled_files: z.array(z.string()),
+  /** Conventions dropped because their snippet was not found in the cited file. */
+  dropped: z.number().int(),
+  model: z.string(),
+  /** USD billed for both model calls; null when the provider reported no cost. */
+  cost_usd: z.number().nullable(),
+});
+export type ConventionExtraction = z.infer<typeof ConventionExtraction>;
+
+/** "Edit first" overrides; both optional — without them the rule and a derived name are used. */
+export const ConventionAcceptRequest = z.object({
+  rule: z.string().trim().min(1).max(500).optional(),
+  name: SkillName.optional(),
+});
+export type ConventionAcceptRequest = z.infer<typeof ConventionAcceptRequest>;
+
+export const ConventionAcceptResult = z.object({
+  convention: ConventionCandidate,
+  skill_id: z.string(),
+  skill_name: z.string(),
+});
+export type ConventionAcceptResult = z.infer<typeof ConventionAcceptResult>;
+
 // ---- Agents ----
 export const Provider = z.enum(['openai', 'anthropic', 'openrouter']);
 export type Provider = z.infer<typeof Provider>;
