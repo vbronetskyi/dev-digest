@@ -167,6 +167,22 @@ describe("devdigest-mcp tools", () => {
     expect(text(res)).toMatch(/no blast-radius endpoint yet/);
   });
 
+  it("get_blast_radius returns a compact map, and the server's reason when it has none", async () => {
+    const blast = {
+      changed_symbols: [{ name: "rateLimit", file: "src/ratelimit.ts", kind: "function" }],
+      downstream: [{ symbol: "rateLimit", callers: Array.from({ length: 12 }, (_, i) => ({ name: `c${i}`, file: `src/c${i}.ts`, line: i + 1 })), endpoints_affected: ["GET /items"], crons_affected: [] }],
+      summary: "1 symbol changed → 12 callers, 1 endpoint",
+    };
+    const client = await connect(fakeApi({ "GET /repos": [REPO], "GET /repos/r1/pulls": PULLS, "GET /pulls/p3/blast-radius": blast, "GET /pulls/p1/blast-radius": { ...blast, downstream: [], degraded: { reason: "not_indexed", message: "Not indexed yet." } } }).api);
+    const out = json(await client.callTool({ name: "get_blast_radius", arguments: { repo: "acme/payments-api", pr: 3 } }));
+    expect(out.downstream[0]).toMatchObject({ symbol: "rateLimit", file: "src/ratelimit.ts", endpoints: ["GET /items"], more_callers: 2 });
+    expect(out.downstream[0].callers).toHaveLength(10);
+    expect(out.downstream[0].callers[0]).toBe("src/c0.ts:1 (c0)");
+    const degraded = await client.callTool({ name: "get_blast_radius", arguments: { repo: "acme/payments-api", pr: 1 } });
+    expect(degraded.isError).toBe(true);
+    expect(text(degraded)).toBe("Not indexed yet.");
+  });
+
   it("an unreachable API is reported with how to start it", async () => {
     const down = new DevDigestApi("http://127.0.0.1:9", (async () => { throw new TypeError("fetch failed"); }) as typeof fetch);
     const res = await (await connect(down)).callTool({ name: "list_agents", arguments: {} });

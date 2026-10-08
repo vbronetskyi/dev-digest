@@ -9,7 +9,7 @@ what to do next.
 | `run_agent_on_pr` | `repo`, `pr`, `agent`, `wait_seconds?` (10–900, default 240) | compact run (below), or `{run_id, status: "running", next}` after the wait | starts one paid review |
 | `get_findings` | `run_id`, or `repo` + `pr` (+ `agent?`) | compact run of that run / the newest **done** run | none |
 | `get_conventions` | `repo`, `include_pending?` | `{repo, conventions: [{rule, evidence, confidence, accepted?}], note?}` — accepted only by default | none |
-| `get_blast_radius` | `repo`, `pr` | whatever `GET /pulls/:id/blast-radius` returns; an error result while the server has no such route | none |
+| `get_blast_radius` | `repo`, `pr` | `{summary, downstream: [{symbol, file, callers: ["file:line (name)"] ≤ 10, more_callers?, endpoints, crons}]}`; the server's reason as an error result when the index or PR files are missing, or when the server has no such route | none |
 
 Compact run:
 
