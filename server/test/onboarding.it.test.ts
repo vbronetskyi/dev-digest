@@ -102,7 +102,7 @@ d('L05 onboarding generator — SPEC-02 (Testcontainers pg)', () => {
     expect(offRes.json().error.message).toMatch(/index the repository first/);
   });
 
-  it('AC-13: refuses when there is no clone, or the clone and the index describe different commits', async () => {
+  it('AC-16/AC-24: refuses when there is no clone, or the clone and the index describe different commits', async () => {
     const llm = new MockLLMProvider('openai', { structuredBySchema: { OnboardingTour: OUTPUT('x') } });
     const noClone = await appWith(llm, new MockGitClient({ noClone: true }));
     const a = await noClone.inject({ method: 'POST', url: `/repos/${await repo({ indexed: true })}/onboarding` });

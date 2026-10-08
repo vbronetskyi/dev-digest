@@ -225,17 +225,19 @@ export interface GitClient {
   log(repo: RepoRef, path?: string): Promise<GitCommit[]>;
   readFile(repo: RepoRef, path: string): Promise<string>;
   /**
-   * Files committed at HEAD of the clone (the default branch it tracks), with
+   * Files committed at HEAD of the clone (the default branch it tracks) — or at
+   * `commit` when given — with
    * blob sizes — read from the git tree, no file is opened; untracked, ignored
    * files and symbolic links never appear. `null` when the repo has no clone.
    */
-  listFiles(repo: RepoRef): Promise<TrackedFile[] | null>;
+  listFiles(repo: RepoRef, commit?: string): Promise<TrackedFile[] | null>;
   /**
-   * A file's content as committed at HEAD (`git show HEAD:<path>`) — never the
-   * working tree, so a symlink is its target text, not the file it points at.
-   * `null` when the path is not in the commit or there is no clone.
+   * A file's content as committed at HEAD — or at `commit` when given
+   * (`git show <commit>:<path>`) — never the working tree, so a symlink is its
+   * target text, not the file it points at. `null` when the path is not in the
+   * commit or there is no clone.
    */
-  readCommitted(repo: RepoRef, path: string): Promise<string | null>;
+  readCommitted(repo: RepoRef, path: string, commit?: string): Promise<string | null>;
   clonePathFor(repo: RepoRef): string;
 }
 

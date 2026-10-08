@@ -90,6 +90,14 @@ describe("OnboardingTour", () => {
     expect(screen.getAllByTestId("diagram")).toHaveLength(1);
   });
 
+  it("AC-12: section prose never becomes a link, even a bare URL that slipped past the server", () => {
+    const sections = TOUR.sections.map((sec) => (sec.kind === "how_to_run" ? { ...sec, body: "Use `foo and https://evil.example/x" } : sec));
+    renderTour({ tour: { ...TOUR, sections } });
+    const run = screen.getByRole("region", { name: "How to run locally" });
+    expect(run.querySelector("a[href]")).toBeNull();
+    expect(run.textContent).toContain("https://evil.example/x");
+  });
+
   it("shows a failed generation next to the stored tour", () => {
     renderTour({ error: "Couldn't regenerate the tour (timeout). The previous tour is kept." });
     expect(screen.getByRole("alert").textContent).toContain("The previous tour is kept.");

@@ -60,7 +60,8 @@ Narrative (one model call)
   may carry a diagram.
 - **AC-9** The reading path shall be the top-ranked files of the index (at most eight,
   rank descending, ties by path), leaving out style, constant and type modules by file
-  name (`styles.*`, `constants.*`, `types.*`, `*.d.ts`), in that order; the model's notes are attached to those steps, and a step or path the
+  name (`style.*`/`styles.*`, `constant.*`/`constants.*`, `type.*`/`types.*`, `*.d.ts`),
+  in that order; the model's notes are attached to those steps, and a step or path the
   model adds is ignored.
 - **AC-10** The critical paths shall be the import chains from the index; the model's
   notes are attached to them, and a path the model adds is ignored.
@@ -160,3 +161,7 @@ excerpts) is rewritten to match AC-7–AC-10.
   Code also fixed for AC-4 (the note now names every empty index part and shows in
   model-written tours), AC-6 (the cap measured compact JSON, the prompt sends it
   indented) and AC-12 (bare URLs and reference links survived).
+- 2026-10-08 — after the second verification pass: AC-9 names the singular file names the
+  rule already covered; AC-24 reads the tree and manifests at the checked commit, not the
+  symbolic HEAD (a resync mid-generation could have mixed two); tour prose is rendered
+  with no links at all, so a URL the server misses still cannot become one.

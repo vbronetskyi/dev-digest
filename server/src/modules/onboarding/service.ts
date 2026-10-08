@@ -65,14 +65,19 @@ export class OnboardingService {
     if (this.running.has(repoId)) throw new ConflictError('A tour for this repository is already being generated.');
     this.running.add(repoId);
     try {
-      const tree = await this.container.git.listFiles(ref);
-      if (!tree) throw new ConflictError('This repository has no local clone yet. Index it first, then generate the tour.');
-      // AC-13: the tree, the manifests and the index must describe one commit.
-      const head = await this.container.git.currentHead(ref);
-      if (head !== state.lastIndexedSha) {
-        throw new ConflictError(`The clone is at ${head.slice(0, 7)} but the index is at ${state.lastIndexedSha.slice(0, 7)}. Resync the repository, then generate the tour.`);
+      const sha = state.lastIndexedSha;
+      // AC-24: the tree, the manifests and the index must describe one commit —
+      // checked once, then everything is read at that commit, so a resync
+      // landing mid-generation cannot mix two.
+      if ((await this.container.git.listFiles(ref)) === null) {
+        throw new ConflictError('This repository has no local clone yet. Index it first, then generate the tour.');
       }
-      const facts = await this.collectFacts(ref, repoId, state.lastIndexedSha, tree);
+      const head = await this.container.git.currentHead(ref);
+      if (head !== sha) {
+        throw new ConflictError(`The clone is at ${head.slice(0, 7)} but the index is at ${sha.slice(0, 7)}. Resync the repository, then generate the tour.`);
+      }
+      const tree = (await this.container.git.listFiles(ref, sha)) ?? [];
+      const facts = await this.collectFacts(ref, repoId, sha, tree);
       const tracked = new Set(tree.map((f) => f.path));
       const base = { generated_at: new Date().toISOString(), indexed_sha: facts.indexed_sha, files_total: facts.files_total };
 
@@ -116,7 +121,7 @@ export class OnboardingService {
   private async collectFacts(ref: RepoRef, repoId: string, indexedSha: string, tree: TrackedFile[]): Promise<RepoFacts> {
     const manifests: ManifestFacts[] = [];
     for (const path of manifestPaths(tree)) {
-      const text = await this.container.git.readCommitted(ref, path);
+      const text = await this.container.git.readCommitted(ref, path, indexedSha);
       const parsed = text === null ? null : parseManifest(path, text);
       if (parsed) manifests.push({ ...parsed, manager: managerFor(path, tree) });
     }

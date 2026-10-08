@@ -28,7 +28,7 @@ sharing, scheduled regeneration.
 - [x] T5 `skeletonTour(facts, reason)` → AC-14 → `test/onboarding-helpers.test.ts`
 - [x] T6 Service + routes `GET/POST /repos/:id/onboarding`: 409 when not indexed or busy,
   one call under a 90 s deadline, skeleton on failure, a good tour kept on a failed
-  regenerate, meta stored → AC-5, AC-7, AC-13, AC-14, AC-15, AC-16, AC-17, AC-18, AC-19
+  regenerate, meta stored → AC-5, AC-7, AC-13, AC-14, AC-15, AC-16, AC-17, AC-18, AC-19, AC-24
   → `test/onboarding.it.test.ts`
 - [x] T7 Client hooks + page `/repos/:repoId/onboarding` + nav item → AC-20, AC-21,
   AC-22, AC-23 → `OnboardingTour.test.tsx`
@@ -54,9 +54,9 @@ sharing, scheduled regeneration.
 | AC-13 | T6 | onboarding.it meta | 7b14b2b, 2f30c79 |
 | AC-14 | T5, T6 | onboarding-helpers "skeleton", onboarding.it "model fails", "no provider key"; deadline.test | d660aad, 7b14b2b, 2f30c79 |
 | AC-15 | T6 | onboarding.it "keeps good tour" | 7b14b2b |
-| AC-16 | T6 | onboarding.it "409 not indexed" | 7b14b2b, 2f30c79 |
+| AC-16 | T6 | onboarding.it "409 not indexed", "AC-16/AC-24" | 7b14b2b, 2f30c79 |
 | AC-17 | T6 | onboarding.it "409 busy" | 7b14b2b |
-| AC-24 | T6 | onboarding.it "AC-13: refuses … different commits" | 2f30c79 |
+| AC-24 | T6 | onboarding.it "AC-16/AC-24: refuses … different commits" | 2f30c79 |
 | AC-18 | T6 | onboarding.it "GET no call" | 7b14b2b |
 | AC-19 | T6 | onboarding.it "replace" | 7b14b2b |
 | AC-20 | T7 | OnboardingTour.test "empty" | 3c8c9f5 |

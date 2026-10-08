@@ -131,17 +131,17 @@ export class SimpleGitClient implements GitClient {
     return readFile(join(this.clonePathFor(repo), path), 'utf8');
   }
 
-  async listFiles(repo: RepoRef): Promise<TrackedFile[] | null> {
+  async listFiles(repo: RepoRef, commit = 'HEAD'): Promise<TrackedFile[] | null> {
     if (!(await this.exists(join(this.clonePathFor(repo), '.git')))) return null;
     // -z: NUL-separated records with paths unquoted, whatever characters they hold.
-    const raw = await this.git(repo).raw(['ls-tree', '-r', '-l', '-z', '--full-tree', 'HEAD']);
+    const raw = await this.git(repo).raw(['ls-tree', '-r', '-l', '-z', '--full-tree', commit]);
     return parseLsTree(raw);
   }
 
-  async readCommitted(repo: RepoRef, path: string): Promise<string | null> {
+  async readCommitted(repo: RepoRef, path: string, commit = 'HEAD'): Promise<string | null> {
     if (!(await this.exists(join(this.clonePathFor(repo), '.git')))) return null;
     try {
-      return await this.git(repo).raw(['show', `HEAD:${path}`]);
+      return await this.git(repo).raw(['show', `${commit}:${path}`]);
     } catch {
       return null; // not in the commit
     }

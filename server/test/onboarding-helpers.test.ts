@@ -70,6 +70,12 @@ describe('groundTour', () => {
     ]);
   });
 
+  it('AC-9: the reading path stops at eight steps', () => {
+    const many = Array.from({ length: 10 }, (_, i) => `server/src/f${i}.ts`);
+    const long = groundTour(OUTPUT, { ...FACTS, top_files: many }, new Set([...TRACKED, ...many]), META);
+    expect(long.sections.find((s) => s.kind === 'reading_path')!.links.map((l) => l.path)).toEqual(many.slice(0, 8));
+  });
+
   it('AC-10/AC-11: chains come from the index; notes for paths the model invented and links to uncommitted files are dropped', () => {
     expect(kind('critical_paths').links).toEqual([{ label: 'Boot wires everything.', path: 'server/src/app.ts' }]);
     expect(kind('critical_paths').body).toContain('1. `server/src/app.ts` → `server/src/db.ts` — Boot wires everything.');

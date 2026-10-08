@@ -30,7 +30,10 @@ export function TourSection({ section, repoFullName, sha }: { section: Onboardin
       </button>
       {open && (
         <div style={s.body}>
-          <Markdown safe>{section.body}</Markdown>
+          {/* Model prose: no links at all (SPEC-02 AC-12) — the server strips them, this holds if one slips through. */}
+          <Markdown safe links="none">
+            {section.body}
+          </Markdown>
           {section.diagram && (
             <div style={s.diagram}>
               <MermaidDiagram chart={section.diagram} />

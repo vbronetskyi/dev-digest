@@ -11,19 +11,31 @@ function httpOnly(url: string): string | null {
   return /^https?:\/\//i.test(url) ? url : null;
 }
 
+/** `links="none"`: every target is dropped, so a link — even one GFM made from a bare URL — is plain text. */
+const noUrl = (): null => null;
+
 /**
  * Markdown renderer (replaces prototype mdLite). Inline + GFM. Raw HTML is never
  * rendered. `safe` is for text written outside DevDigest (repository documents,
  * model output): only http(s) links keep their target and images are dropped,
  * so the page never loads anything the text points at.
  */
-export function Markdown({ children, safe = false }: { children?: string | null; safe?: boolean }) {
+export function Markdown({
+  children,
+  safe = false,
+  links = "http",
+}: {
+  children?: string | null;
+  safe?: boolean;
+  /** In safe mode: keep http(s) links (repository documents) or none at all (model prose). */
+  links?: "http" | "none";
+}) {
   if (!children) return null;
   return (
     <div className="dd-md" style={{ fontSize: "inherit", lineHeight: 1.55 }}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        {...(safe ? { urlTransform: httpOnly, disallowedElements: ["img"] } : {})}
+        {...(safe ? { urlTransform: links === "none" ? noUrl : httpOnly, disallowedElements: ["img"] } : {})}
         components={{
           h1: ({ children }) => <h1 style={heading(1.35, 700, "14px 0 8px")}>{children}</h1>,
           h2: ({ children }) => <h2 style={heading(1.18, 650, "14px 0 6px")}>{children}</h2>,
