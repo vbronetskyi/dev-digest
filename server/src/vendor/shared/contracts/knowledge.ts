@@ -115,7 +115,7 @@ export type MemoryItem = z.infer<typeof MemoryItem>;
 export const SkillType = z.enum(['rubric', 'convention', 'security', 'custom']);
 export type SkillType = z.infer<typeof SkillType>;
 
-export const SkillSource = z.enum(['manual', 'imported_url', 'extracted', 'community']);
+export const SkillSource = z.enum(['manual', 'imported_url', 'imported_file', 'extracted', 'community']);
 export type SkillSource = z.infer<typeof SkillSource>;
 
 export const Skill = z.object({
@@ -189,12 +189,25 @@ export const SkillImportPreview = z.object({
   description: z.string(),
   body: z.string(),
   type: SkillType,
-  /** The URL actually fetched (GitHub page links are rewritten to raw). */
-  source_url: z.string(),
+  /** The URL actually fetched (GitHub page links are rewritten to raw); null for a file. */
+  source_url: z.string().nullable(),
   /** Things a human should look at before importing third-party text. */
   warnings: z.array(z.string()),
 });
 export type SkillImportPreview = z.infer<typeof SkillImportPreview>;
+
+/** Same cap as a fetched SKILL.md (256 KB). */
+export const SKILL_FILE_MAX_CHARS = 256 * 1024;
+
+/** A SKILL.md the user uploads or pastes; parsed and previewed like a URL import. */
+export const SkillFileImport = z.object({
+  text: z.string().min(1).max(SKILL_FILE_MAX_CHARS),
+  filename: z.string().max(255).optional(),
+  /** Optional overrides chosen on the preview screen. */
+  name: SkillName.optional(),
+  type: SkillType.optional(),
+});
+export type SkillFileImport = z.infer<typeof SkillFileImport>;
 
 export const CommunitySkill = z.object({
   name: z.string(),

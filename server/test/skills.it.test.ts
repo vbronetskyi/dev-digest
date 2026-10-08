@@ -101,6 +101,12 @@ d('L02 skills (Testcontainers pg)', () => {
     // Imported skills stay disabled until a human vets and enables them.
     expect(imported.json()).toMatchObject({ source: 'imported_url', source_url: RAW_URL, type: 'convention', body: 'Use kebab-case paths.', enabled: false });
 
+    const filePreview = await app.inject({ method: 'POST', url: '/skills/import/file/preview', payload: { text: SKILL_MD.replace('api-conventions', 'file-conventions'), filename: 'x.md' } });
+    expect(filePreview.json()).toMatchObject({ name: 'file-conventions', source_url: null, warnings: [] });
+    const fromFile = await app.inject({ method: 'POST', url: '/skills/import/file', payload: { text: SKILL_MD.replace('api-conventions', 'file-conventions'), type: 'rubric' } });
+    expect(fromFile.statusCode).toBe(201);
+    expect(fromFile.json()).toMatchObject({ name: 'file-conventions', source: 'imported_file', source_url: null, type: 'rubric', enabled: false });
+
     const missing = await app.inject({ method: 'POST', url: '/skills/import/preview', payload: { url: 'https://example.com/nope.md' } });
     expect(missing.statusCode).toBe(422);
     expect(missing.json().error.message).toMatch(/HTTP 404/);

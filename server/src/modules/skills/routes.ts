@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { SkillImportRequest, SkillInput, SkillUpdate } from '@devdigest/shared';
+import { SkillFileImport, SkillImportRequest, SkillInput, SkillUpdate } from '@devdigest/shared';
 import { getContext } from '../_shared/context.js';
 import { IdParams } from '../_shared/schemas.js';
 import { SkillsService } from './service.js';
@@ -20,6 +20,8 @@ const IMPORT_RATE_LIMIT = { rateLimit: { max: 10, timeWindow: '1 minute' } };
  *   GET    /skills/:id/stats        → linked agents + runs whose prompt used it
  *   POST   /skills/import/preview   → fetch + parse a SKILL.md URL, save nothing
  *   POST   /skills/import           → fetch + save as source=imported_url
+ *   POST   /skills/import/file/preview → parse an uploaded / pasted SKILL.md, save nothing
+ *   POST   /skills/import/file      → parse + save as source=imported_file
  */
 export default async function skillsRoutes(appBase: FastifyInstance) {
   const app = appBase.withTypeProvider<ZodTypeProvider>();
@@ -54,6 +56,21 @@ export default async function skillsRoutes(appBase: FastifyInstance) {
       return service.import(workspaceId, req.body);
     },
   );
+
+  app.post(
+    '/skills/import/file/preview',
+    { schema: { body: SkillFileImport.pick({ text: true, filename: true }) } },
+    async (req) => {
+      await getContext(app.container, req);
+      return service.previewFile(req.body.text, req.body.filename);
+    },
+  );
+
+  app.post('/skills/import/file', { schema: { body: SkillFileImport } }, async (req, reply) => {
+    const { workspaceId } = await getContext(app.container, req);
+    reply.status(201);
+    return service.importFile(workspaceId, req.body);
+  });
 
   app.get('/skills/:id', { schema: { params: IdParams } }, async (req) => {
     const { workspaceId } = await getContext(app.container, req);

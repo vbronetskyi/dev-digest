@@ -1,5 +1,6 @@
 import type {
   Skill,
+  SkillFileImport,
   SkillImportPreview,
   SkillImportRequest,
   SkillInput,
@@ -79,12 +80,30 @@ export class SkillsService {
     } catch (err) {
       throw new ValidationError(`Could not fetch the skill: ${(err as Error).message}`);
     }
-    return buildImportPreview(doc.url, doc.text, 'custom');
+    return buildImportPreview({ kind: 'url', url: doc.url }, doc.text, 'custom');
+  }
+
+  /** Parse an uploaded or pasted SKILL.md without saving it. */
+  previewFile(text: string, filename?: string): SkillImportPreview {
+    return buildImportPreview({ kind: 'file', ...(filename ? { filename } : {}) }, text, 'custom');
+  }
+
+  /** Save an uploaded file the same way as a URL import: disabled until vetted. */
+  async importFile(workspaceId: string, req: SkillFileImport): Promise<Skill> {
+    return this.saveImported(workspaceId, this.previewFile(req.text, req.filename), req, 'imported_file');
   }
 
   /** Fetch again and save, applying the overrides picked on the preview screen. */
   async import(workspaceId: string, req: SkillImportRequest): Promise<Skill> {
-    const preview = await this.previewImport(req.url);
+    return this.saveImported(workspaceId, await this.previewImport(req.url), req, 'imported_url');
+  }
+
+  private async saveImported(
+    workspaceId: string,
+    preview: SkillImportPreview,
+    req: { name?: string; type?: SkillImportPreview['type'] },
+    source: 'imported_url' | 'imported_file',
+  ): Promise<Skill> {
     const parsed = SkillInputSchema.safeParse({
       name: req.name ?? preview.name,
       description: preview.description,
@@ -92,7 +111,7 @@ export class SkillsService {
       body: preview.body,
     });
     if (!parsed.success) {
-      throw new ValidationError('The fetched skill is not valid', parsed.error.flatten());
+      throw new ValidationError('The imported skill is not valid', parsed.error.flatten());
     }
     await this.assertNameFree(workspaceId, parsed.data.name);
     // Third-party text lands disabled: enabling it is the human vetting step, and
@@ -101,7 +120,7 @@ export class SkillsService {
       workspaceId,
       ...parsed.data,
       enabled: false,
-      source: 'imported_url',
+      source,
       sourceUrl: preview.source_url,
     });
     return toSkillDto(row);

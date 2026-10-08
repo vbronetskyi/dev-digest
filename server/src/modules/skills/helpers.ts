@@ -125,19 +125,39 @@ export function skillNameFromUrl(input: string): string {
   return toSkillName(stem) || 'imported-skill';
 }
 
+/** Where a previewed skill came from: a fetched URL or an uploaded / pasted file. */
+export type ImportOrigin = { kind: 'url'; url: string } | { kind: 'file'; filename?: string };
+
+/** Name for a file without frontmatter: the file stem (unless it is SKILL.md), else the first heading. */
+export function skillNameFromFile(filename: string | undefined, body: string): string {
+  const stem = (filename ?? '').split(/[\\/]/).pop()!.replace(/\.(md|markdown|txt)$/i, '');
+  if (stem && !/^skill$/i.test(stem)) {
+    const fromStem = toSkillName(stem);
+    if (fromStem) return fromStem;
+  }
+  const heading = body.match(/^#{1,3}\s+(.+)$/m)?.[1] ?? '';
+  return toSkillName(heading) || 'imported-skill';
+}
+
 /** Build the import preview a human reviews before third-party text is saved. */
-export function buildImportPreview(sourceUrl: string, raw: string, type: SkillType): SkillImportPreview {
+export function buildImportPreview(origin: ImportOrigin, raw: string, type: SkillType): SkillImportPreview {
   const doc = parseSkillDoc(raw);
   const warnings: string[] = [];
   const nameAttr = doc.attributes.name ? toSkillName(doc.attributes.name) : '';
-  const name = nameAttr || skillNameFromUrl(sourceUrl);
+  const name =
+    nameAttr || (origin.kind === 'url' ? skillNameFromUrl(origin.url) : skillNameFromFile(origin.filename, doc.body));
+  const from = origin.kind === 'url' ? origin.url : (origin.filename ?? 'a pasted file');
   let description = doc.attributes.description ?? '';
 
   if (!doc.hasFrontmatter) {
-    warnings.push('No YAML frontmatter — the name was derived from the URL.');
+    warnings.push(
+      origin.kind === 'url'
+        ? 'No YAML frontmatter — the name was derived from the URL.'
+        : 'No YAML frontmatter — the name was derived from the file name or its first heading.',
+    );
   }
   if (!description) {
-    description = `Imported from ${sourceUrl}`;
+    description = `Imported from ${from}`;
     warnings.push('No description in the frontmatter; a placeholder was used — edit it before linking.');
   }
   if (doc.body.length > LONG_BODY_WARNING_CHARS) {
@@ -152,7 +172,7 @@ export function buildImportPreview(sourceUrl: string, raw: string, type: SkillTy
         'Skills are delimited in the prompt and cannot drop findings, but read it before importing.',
     );
   }
-  return { name, description, body: doc.body, type, source_url: sourceUrl, warnings };
+  return { name, description, body: doc.body, type, source_url: origin.kind === 'url' ? origin.url : null, warnings };
 }
 
 export function toSkillDto(row: SkillRow): Skill {
